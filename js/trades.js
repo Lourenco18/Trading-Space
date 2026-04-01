@@ -29,9 +29,6 @@ function openTradeModal(id = null) {
       document.getElementById('tAssetCustom').value = t.asset || '';
     }
     document.getElementById('tDir').value = t.dir || 'Buy';
-    document.getElementById('tEntry').value = t.entry || '';
-    document.getElementById('tSL').value = t.sl || '';
-    document.getElementById('tTP').value = t.tp || '';
     document.getElementById('tLots').value = t.lots || '';
     document.getElementById('tPnL').value = t.pnl || '';
     document.getElementById('tRisk').value = t.riskPct || '';
@@ -49,7 +46,7 @@ function openTradeModal(id = null) {
     document.getElementById('tRes').value = 'Win';
     document.getElementById('tSess').value = 'London';
     document.getElementById('tStrat').value = '';
-    ['tEntry','tSL','tTP','tLots','tPnL','tRisk','tRR','tSetup','tNotes','tAssetCustom'].forEach(x => {
+    ['tLots','tPnL','tRisk','tRR','tSetup','tNotes','tAssetCustom'].forEach(x => {
       const el = document.getElementById(x); if (el) el.value = '';
     });
     document.getElementById('tAsset').value = 'EUR/USD';
@@ -81,9 +78,6 @@ async function saveTrade() {
     trade_date: document.getElementById('tDate').value || null,
     asset,
     direction: document.getElementById('tDir').value,
-    entry_price: parseFloat(document.getElementById('tEntry').value) || null,
-    stop_loss: parseFloat(document.getElementById('tSL').value) || null,
-    take_profit: parseFloat(document.getElementById('tTP').value) || null,
     lots: parseFloat(document.getElementById('tLots').value) || null,
     pnl: parseFloat(document.getElementById('tPnL').value) || 0,
     risk_pct: parseFloat(document.getElementById('tRisk').value) || null,
@@ -173,9 +167,6 @@ function renderTrades() {
       <td class="text-muted sm ellipsis" style="max-width:110px">${acc?.name || '—'}</td>
       <td style="font-weight:600;color:var(--accent2)">${t.asset || '—'}</td>
       <td><span class="tag ${t.dir === 'Buy' ? 'tag-buy' : 'tag-sell'}">${t.dir}</span></td>
-      <td class="mono sm">${t.entry || '—'}</td>
-      <td class="mono sm" style="color:var(--red)">${t.sl || '—'}</td>
-      <td class="mono sm" style="color:var(--green)">${t.tp || '—'}</td>
       <td class="mono sm">${t.lots || '—'}</td>
       <td class="${t.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${fmt(t.pnl)}</td>
       <td>${t.riskPct ? `<span class="mono sm" style="color:var(--yellow)">${parseFloat(t.riskPct).toFixed(2)}%</span>` : '<span class="text-muted">—</span>'}</td>
@@ -214,9 +205,6 @@ function viewTrade(id) {
       <div class="detail-box"><div class="detail-label">Ativo</div><div class="detail-val" style="color:var(--accent2)">${t.asset}</div></div>
       <div class="detail-box"><div class="detail-label">Direção</div><div class="detail-val"><span class="tag ${t.dir === 'Buy' ? 'tag-buy' : 'tag-sell'}">${t.dir}</span></div></div>
       <div class="detail-box"><div class="detail-label">Resultado</div><div class="detail-val"><span class="tag ${t.result === 'Win' ? 'tag-win' : t.result === 'Loss' ? 'tag-loss' : 'tag-be'}">${t.result}</span></div></div>
-      <div class="detail-box"><div class="detail-label">Entry</div><div class="detail-val mono">${t.entry || '—'}</div></div>
-      <div class="detail-box"><div class="detail-label">Stop Loss</div><div class="detail-val mono" style="color:var(--red)">${t.sl || '—'}</div></div>
-      <div class="detail-box"><div class="detail-label">Take Profit</div><div class="detail-val mono" style="color:var(--green)">${t.tp || '—'}</div></div>
       <div class="detail-box"><div class="detail-label">Lotes</div><div class="detail-val mono">${t.lots || '—'}</div></div>
       <div class="detail-box"><div class="detail-label">PnL</div><div class="detail-val ${t.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${fmt(t.pnl)}</div></div>
       <div class="detail-box"><div class="detail-label">Risco</div><div class="detail-val" style="color:var(--yellow)">${t.riskPct ? parseFloat(t.riskPct).toFixed(2) + '%' : '—'}</div></div>

@@ -2147,9 +2147,6 @@
                       <th>Account</th>
                       <th>Asset</th>
                       <th>Dir.</th>
-                      <th>Entry</th>
-                      <th>SL</th>
-                      <th>TP</th>
                       <th>Lots</th>
                       <th>PnL ($)</th>
                       <th>Risk%</th>
@@ -3191,49 +3188,16 @@
           <div class="form-field">
             <label>Ativo / Par *</label>
             <select id="tAsset" onchange="handleAssetChange(event)">
-              <optgroup label="Forex Majors">
+              <optgroup label="OG">
                 <option>EUR/USD</option>
                 <option>GBP/USD</option>
                 <option>USD/JPY</option>
-                <option>USD/CHF</option>
-                <option>AUD/USD</option>
-                <option>USD/CAD</option>
-                <option>NZD/USD</option>
-              </optgroup>
-              <optgroup label="Forex Minors">
                 <option>EUR/GBP</option>
-                <option>EUR/JPY</option>
-                <option>GBP/JPY</option>
-                <option>EUR/AUD</option>
-                <option>GBP/AUD</option>
-                <option>AUD/JPY</option>
-                <option>EUR/CAD</option>
-                <option>GBP/CAD</option>
-                <option>CAD/JPY</option>
-                <option>EUR/NZD</option>
-                <option>GBP/NZD</option>
-                <option>AUD/NZD</option>
               </optgroup>
-              <optgroup label="Índices">
-                <option>NAS100</option>
-                <option>US500</option>
+              <optgroup label="CVD">
+                <option>US100</option>
                 <option>US30</option>
-                <option>DAX40</option>
-                <option>FTSE100</option>
-                <option>JP225</option>
-                <option>AUS200</option>
-              </optgroup>
-              <optgroup label="Metais">
                 <option>XAUUSD</option>
-                <option>XAGUSD</option>
-              </optgroup>
-              <optgroup label="Crypto">
-                <option>BTCUSD</option>
-                <option>ETHUSD</option>
-              </optgroup>
-              <optgroup label="Energia">
-                <option>USOIL</option>
-                <option>UKOIL</option>
               </optgroup>
               <option value="__custom">Outro (escrever)</option>
             </select>
@@ -3248,18 +3212,6 @@
               <option value="Buy">Buy (Long)</option>
               <option value="Sell">Sell (Short)</option>
             </select>
-          </div>
-          <div class="form-field">
-            <label>Entry Price</label
-            ><input type="number" id="tEntry" step="0.00001" />
-          </div>
-          <div class="form-field">
-            <label>Stop Loss</label
-            ><input type="number" id="tSL" step="0.00001" />
-          </div>
-          <div class="form-field">
-            <label>Take Profit</label
-            ><input type="number" id="tTP" step="0.00001" />
           </div>
           <div class="form-field">
             <label>Lotes</label><input type="number" id="tLots" step="0.01" />
@@ -3446,9 +3398,6 @@
         date: r.trade_date,
         asset: r.asset,
         dir: r.direction,
-        entry: r.entry_price,
-        sl: r.stop_loss,
-        tp: r.take_profit,
         lots: r.lots,
         pnl: +r.pnl || 0,
         riskPct: r.risk_pct || "",
@@ -3878,31 +3827,10 @@
         "EUR/USD",
         "GBP/USD",
         "USD/JPY",
-        "USD/CHF",
-        "AUD/USD",
-        "USD/CAD",
-        "NZD/USD",
         "EUR/GBP",
-        "EUR/JPY",
-        "GBP/JPY",
-        "EUR/AUD",
-        "GBP/AUD",
-        "AUD/JPY",
-        "EUR/CAD",
-        "GBP/CAD",
-        "CAD/JPY",
-        "EUR/NZD",
-        "GBP/NZD",
-        "NAS100",
-        "US500",
+        "US100",
         "US30",
-        "DAX40",
-        "FTSE100",
         "XAUUSD",
-        "XAGUSD",
-        "BTCUSD",
-        "ETHUSD",
-        "USOIL",
       ];
 
       function openStratModal(id = null) {
@@ -4135,32 +4063,21 @@
             document.getElementById("tAssetCustom").value = tr.asset || "";
           }
           document.getElementById("tDir").value = tr.dir || "Buy";
-          [
-            "tEntry",
-            "tSL",
-            "tTP",
-            "tLots",
-            "tPnL",
-            "tRisk",
-            "tRR",
-            "tSetup",
-            "tNotes",
-          ].forEach((id2) => {
-            const e = document.getElementById(id2);
-            if (e)
-              e.value =
-                {
-                  tEntry: tr.entry,
-                  tSL: tr.sl,
-                  tTP: tr.tp,
-                  tLots: tr.lots,
-                  tPnL: tr.pnl,
-                  tRisk: tr.riskPct,
-                  tRR: tr.rr,
-                  tSetup: tr.setup,
-                  tNotes: tr.notes,
-                }[id2] || "";
-          });
+          ["tLots", "tPnL", "tRisk", "tRR", "tSetup", "tNotes"].forEach(
+            (id2) => {
+              const e = document.getElementById(id2);
+              if (e)
+                e.value =
+                  {
+                    tLots: tr.lots,
+                    tPnL: tr.pnl,
+                    tRisk: tr.riskPct,
+                    tRR: tr.rr,
+                    tSetup: tr.setup,
+                    tNotes: tr.notes,
+                  }[id2] || "";
+            },
+          );
           document.getElementById("tRes").value = tr.result || "Win";
           document.getElementById("tSess").value = tr.session || "London";
           document.getElementById("tStrat").value = tr.strategyId || "";
@@ -4173,9 +4090,6 @@
           document.getElementById("tSess").value = "London";
           document.getElementById("tStrat").value = "";
           [
-            "tEntry",
-            "tSL",
-            "tTP",
             "tLots",
             "tPnL",
             "tRisk",
@@ -4231,10 +4145,6 @@
           trade_date: document.getElementById("tDate").value || null,
           asset,
           direction: document.getElementById("tDir").value,
-          entry_price:
-            parseFloat(document.getElementById("tEntry").value) || null,
-          stop_loss: parseFloat(document.getElementById("tSL").value) || null,
-          take_profit: parseFloat(document.getElementById("tTP").value) || null,
           lots: parseFloat(document.getElementById("tLots").value) || null,
           pnl: parseFloat(document.getElementById("tPnL").value) || 0,
           risk_pct: parseFloat(document.getElementById("tRisk").value) || null,
@@ -4354,9 +4264,6 @@
       <td class="text-muted sm ellipsis" style="max-width:110px">${acc?.name || "—"}</td>
       <td style="font-weight:600;color:var(--accent2)">${t.asset || "—"}</td>
       <td><span class="tag ${t.dir === "Buy" ? "tag-buy" : "tag-sell"}">${t.dir}</span></td>
-      <td class="mono sm">${t.entry || "—"}</td>
-      <td class="mono sm" style="color:var(--red)">${t.sl || "—"}</td>
-      <td class="mono sm" style="color:var(--green)">${t.tp || "—"}</td>
       <td class="mono sm">${t.lots || "—"}</td>
       <td class="${t.pnl >= 0 ? "pnl-pos" : "pnl-neg"}">${fmt(t.pnl)}</td>
       <td>${t.riskPct ? `<span class="mono sm" style="color:var(--yellow)">${parseFloat(t.riskPct).toFixed(2)}%</span>` : '<span class="text-muted">—</span>'}</td>
@@ -4398,9 +4305,6 @@
       <div class="detail-box"><div class="detail-label">Ativo</div><div class="detail-val" style="color:var(--accent2)">${t.asset}</div></div>
       <div class="detail-box"><div class="detail-label">Direção</div><div class="detail-val"><span class="tag ${t.dir === "Buy" ? "tag-buy" : "tag-sell"}">${t.dir}</span></div></div>
       <div class="detail-box"><div class="detail-label">Resultado</div><div class="detail-val"><span class="tag ${t.result === "Win" ? "tag-win" : t.result === "Loss" ? "tag-loss" : "tag-be"}">${t.result}</span></div></div>
-      <div class="detail-box"><div class="detail-label">Entry</div><div class="detail-val mono">${t.entry || "—"}</div></div>
-      <div class="detail-box"><div class="detail-label">Stop Loss</div><div class="detail-val mono" style="color:var(--red)">${t.sl || "—"}</div></div>
-      <div class="detail-box"><div class="detail-label">Take Profit</div><div class="detail-val mono" style="color:var(--green)">${t.tp || "—"}</div></div>
       <div class="detail-box"><div class="detail-label">Lotes</div><div class="detail-val mono">${t.lots || "—"}</div></div>
       <div class="detail-box"><div class="detail-label">PnL</div><div class="detail-val ${t.pnl >= 0 ? "pnl-pos" : "pnl-neg"}">${fmt(t.pnl)}</div></div>
       <div class="detail-box"><div class="detail-label">Risco</div><div class="detail-val" style="color:var(--yellow)">${t.riskPct ? parseFloat(t.riskPct).toFixed(2) + "%" : "—"}</div></div>
