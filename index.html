@@ -3199,7 +3199,12 @@
                 <option>US30</option>
                 <option>XAUUSD</option>
               </optgroup>
+              <option value="__custom">Outro (personalizado)...</option>
             </select>
+          </div>
+          <div class="form-field" id="customAssetWrap" style="display:none">
+            <label>Ativo personalizado</label>
+            <input type="text" id="tAssetCustom" placeholder="Ex: BTC/USD" />
           </div>
           <div class="form-field">
             <label>Direção</label
@@ -4851,15 +4856,22 @@
       async function boot() {
         showLoading();
 
-        // PRIMARY: use onAuthStateChange to handle ALL auth events
-        // This correctly handles: normal login, Google OAuth redirect,
-        // email confirmation links, token refresh, and logout.
+        // PRIMARY: check existing session immediately (handles already-logged-in case)
+        const { data: { session: existingSession } } = await db.auth.getSession();
+        if (existingSession?.user) {
+          S.user = existingSession.user;
+          await loadAll();
+          showApp();
+        } else {
+          showAuth();
+        }
+
+        // SECONDARY: listen for future auth changes (login, logout, token refresh, OAuth)
         db.auth.onAuthStateChange(async (event, session) => {
           console.log("Auth event:", event, session?.user?.email);
 
-          if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+          if (event === "SIGNED_IN") {
             if (session?.user) {
-              // Only reload data if user changed or we don't have data yet
               if (
                 !S.user ||
                 S.user.id !== session.user.id ||
@@ -4871,9 +4883,6 @@
                 S.user = session.user;
               }
               showApp();
-            } else {
-              // INITIAL_SESSION with no user = not logged in
-              if (event === "INITIAL_SESSION") showAuth();
             }
           } else if (event === "TOKEN_REFRESHED" && session?.user) {
             S.user = session.user;
