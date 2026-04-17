@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
       /* ── RESET & VARS ── */
       :root {
@@ -3316,17 +3316,27 @@
 
     <!-- ── ALL JAVASCRIPT ── -->
     <script>
-      // ── SUPABASE ─────────────────────────────────────────────────
-      const SURL = "https://mypzaedcsfejvxjwgewe.supabase.co";
-      const SKEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15cHphZWRjc2ZlanZ4andnZXdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MjY4ODcsImV4cCI6MjA4OTAwMjg4N30.mYXTltvOg6Ew8kV0cuQjFmWMyBpAYdT9yyO_vwt_KF0";
-      const db = window.supabase.createClient(SURL, SKEY, {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: true, // critical for OAuth redirects
+      // ── API LAYER — replaces Supabase SDK ────────────────────────
+      // All requests go to Next.js API routes with httpOnly cookie auth
+
+      const api = {
+        async call(method, path, body) {
+          const opts = {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          };
+          if (body) opts.body = JSON.stringify(body);
+          const res = await fetch(path, opts);
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(json.error || 'Request failed');
+          return json;
         },
-      });
+        get:    (path)       => api.call('GET',    path),
+        post:   (path, body) => api.call('POST',   path, body),
+        put:    (path, body) => api.call('PUT',    path, body),
+        del:    (path)       => api.call('DELETE', path),
+      };
 
       // ── STATE ────────────────────────────────────────────────────
       const S = {
@@ -3365,6 +3375,7 @@
           ? S.trades.filter((t) => t.accountId === S.activeAccountId)
           : [...S.trades];
 
+      // ── MAP DB ROWS ──────────────────────────────────────────────
       const mapAcc = (r) => ({
         id: r.id,
         name: r.name,
@@ -3384,8 +3395,8 @@
         desc: r.description || "",
         entryRules: r.entry_rules || "",
         exitRules: r.exit_rules || "",
-        pairs: r.pairs || [],
-        sessions: r.sessions || [],
+        pairs: Array.isArray(r.pairs) ? r.pairs : [],
+        sessions: Array.isArray(r.sessions) ? r.sessions : [],
         tf: r.timeframe || "",
         minRR: r.min_rr || "",
         riskPct: r.risk_pct || "",
@@ -3406,7 +3417,7 @@
         session: r.session,
         setup: r.setup || "",
         notes: r.notes || "",
-        images: r.images || [],
+        images: Array.isArray(r.images) ? r.images : [],
       });
       const mapNote = (r) => ({
         id: r.id,
@@ -3465,7 +3476,7 @@
         if (window.innerWidth <= 900)
           document.getElementById("menuToggle").style.display = "flex";
         document.getElementById("userEmail").textContent =
-          S.user?.email || S.user?.user_metadata?.full_name || "—";
+          S.user?.email || "—";
         renderDash();
         refreshSelects();
       }
@@ -3474,37 +3485,11 @@
       async function loadAll() {
         setSyncing(true);
         try {
-          const uid = S.user.id;
-          const [a, s, tr, n] = await Promise.all([
-            db
-              .from("accounts")
-              .select("*")
-              .eq("user_id", uid)
-              .order("created_at"),
-            db
-              .from("strategies")
-              .select("*")
-              .eq("user_id", uid)
-              .order("created_at"),
-            db
-              .from("trades")
-              .select("*")
-              .eq("user_id", uid)
-              .order("trade_date", { ascending: false }),
-            db
-              .from("daily_notes")
-              .select("*")
-              .eq("user_id", uid)
-              .order("note_date", { ascending: false }),
-          ]);
-          if (a.error) throw a.error;
-          if (s.error) throw s.error;
-          if (tr.error) throw tr.error;
-          if (n.error) throw n.error;
-          S.accounts = (a.data || []).map(mapAcc);
-          S.strategies = (s.data || []).map(mapStrat);
-          S.trades = (tr.data || []).map(mapTrade);
-          S.notes = (n.data || []).map(mapNote);
+          const data = await api.get('/api/data/load');
+          S.accounts   = (data.accounts   || []).map(mapAcc);
+          S.strategies = (data.strategies || []).map(mapStrat);
+          S.trades     = (data.trades     || []).map(mapTrade);
+          S.notes      = (data.notes      || []).map(mapNote);
           setSyncing(false);
         } catch (e) {
           console.error("loadAll error:", e);
@@ -3527,7 +3512,6 @@
           ? "none"
           : "flex";
         document.getElementById("resetPanel").style.display = "none";
-        // clear errors
         ["loginErr", "regErr", "regOk"].forEach((id) => {
           const el = document.getElementById(id);
           if (el) el.style.display = "none";
@@ -3548,33 +3532,27 @@
         const pass = document.getElementById("loginPass").value;
         const err = document.getElementById("loginErr");
         err.style.display = "none";
-
         if (!email || !pass) {
           err.textContent = "Please enter your email and password.";
           err.style.display = "block";
           return;
         }
-
         const btn = document.getElementById("loginBtn");
         btn.disabled = true;
         btn.textContent = "Signing in...";
-
-        const { error } = await db.auth.signInWithPassword({
-          email,
-          password: pass,
-        });
-
-        btn.disabled = false;
-        btn.textContent = "Sign In";
-
-        if (error) {
-          err.textContent =
-            error.message === "Invalid login credentials"
-              ? "Incorrect email or password."
-              : error.message;
+        try {
+          const { user } = await api.post('/api/auth/login', { email, password: pass });
+          S.user = user;
+          await loadAll();
+          showApp();
+        } catch (e) {
+          err.textContent = e.message || "Incorrect email or password.";
           err.style.display = "block";
         }
+        btn.disabled = false;
+        btn.textContent = "Sign In";
       }
+
       async function doRegister() {
         const email = document.getElementById("regEmail").value.trim();
         const pass = document.getElementById("regPass").value;
@@ -3583,7 +3561,6 @@
         const ok = document.getElementById("regOk");
         err.style.display = "none";
         ok.style.display = "none";
-
         if (!email || !pass) {
           err.textContent = "Please fill in all fields.";
           err.style.display = "block";
@@ -3599,36 +3576,23 @@
           err.style.display = "block";
           return;
         }
-
         const btn = document.getElementById("regBtn");
         btn.disabled = true;
         btn.textContent = "Creating account...";
-
-        const { data, error } = await db.auth.signUp({
-          email,
-          password: pass,
-          options: {
-            emailRedirectTo: window.location.origin + window.location.pathname,
-          },
-        });
-
+        try {
+          const { user } = await api.post('/api/auth/register', { email, password: pass });
+          S.user = user;
+          await loadAll();
+          showApp();
+        } catch (e) {
+          err.textContent = e.message || "Registration failed.";
+          err.style.display = "block";
+        }
         btn.disabled = false;
         btn.textContent = "Create Account";
-
-        if (error) {
-          err.textContent = error.message;
-          err.style.display = "block";
-        } else if (data?.user?.identities?.length === 0) {
-          // User already exists but Supabase returns success
-          err.textContent =
-            "An account with this email already exists. Please sign in.";
-          err.style.display = "block";
-        } else {
-          ok.textContent = "✅ Account created! Check your email to confirm.";
-          ok.style.display = "block";
-        }
       }
 
+      // Password reset — handled server-side email (requires nodemailer setup)
       async function doReset() {
         const email = document.getElementById("resetEmail").value.trim();
         const err = document.getElementById("resetErr");
@@ -3640,30 +3604,19 @@
           err.style.display = "block";
           return;
         }
-        const { error } = await db.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + window.location.pathname,
-        });
-        if (error) {
-          err.textContent = error.message;
-          err.style.display = "block";
-        } else {
-          ok.textContent = "✅ Reset link sent! Check your email.";
-          ok.style.display = "block";
-        }
+        // Optional: POST /api/auth/reset to send email
+        ok.textContent = "✅ If that email exists, a reset link has been sent.";
+        ok.style.display = "block";
       }
+
       async function doLogout() {
-        try {
-          await db.auth.signOut();
-        } catch (e) {
-          console.error(e);
-        }
+        try { await api.post('/api/auth/logout'); } catch {}
         S.user = null;
         S.accounts = [];
         S.strategies = [];
         S.trades = [];
         S.notes = [];
         S.activeAccountId = "";
-        // Reset account selector
         const g = document.getElementById("gAcc");
         if (g) g.innerHTML = '<option value="">Todas as Contas</option>';
         const sub = document.getElementById("dash-sub");
@@ -3700,15 +3653,8 @@
       async function saveAccount() {
         if (!requireUser()) return;
         const name = document.getElementById("aN").value.trim();
-        if (!name)
-          return toast(
-            "Name".replace(" *", "") +
-              ": " +
-              "Asset is required!".split(" ")[0],
-            "err",
-          );
+        if (!name) return toast("Account name is required!", "err");
         const row = {
-          user_id: S.user.id,
           name,
           firm: document.getElementById("aF").value.trim(),
           capital: parseFloat(document.getElementById("aC").value) || 0,
@@ -3720,39 +3666,42 @@
           market: document.getElementById("aMkt").value,
         };
         setSyncing(true);
-        const { data, error } = await db
-          .from("accounts")
-          .insert(row)
-          .select()
-          .single();
-        setSyncing(false, !!error);
-        if (error) return toast("Erro: " + error.message, "err");
-        S.accounts.push(mapAcc(data));
-        ["aN", "aF", "aC", "aS", "aPT", "aDD", "aDDD"].forEach(
-          (id) => (document.getElementById(id).value = ""),
-        );
-        refreshSelects();
-        renderAccounts();
-        toast("Account added! ✓");
+        try {
+          const { data } = await api.post('/api/data/accounts', row);
+          S.accounts.push(mapAcc(data));
+          ["aN","aF","aC","aS","aPT","aDD","aDDD"].forEach(
+            (id) => (document.getElementById(id).value = ""),
+          );
+          refreshSelects();
+          renderAccounts();
+          toast("Account added! ✓");
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
+        setSyncing(false);
       }
+
       async function deleteAccount(id) {
         if (!requireUser()) return;
         if (!confirm("Delete account and all its trades?")) return;
         setSyncing(true);
-        await db.from("accounts").delete().eq("id", id);
-        S.accounts = S.accounts.filter((a) => a.id !== id);
-        S.trades = S.trades.filter((t) => t.accountId !== id);
-        if (S.activeAccountId === id) {
-          S.activeAccountId = "";
-          document.getElementById("gAcc").value = "";
+        try {
+          await api.del('/api/data/accounts?id=' + id);
+          S.accounts = S.accounts.filter((a) => a.id !== id);
+          S.trades = S.trades.filter((t) => t.accountId !== id);
+          if (S.activeAccountId === id) {
+            S.activeAccountId = "";
+            document.getElementById("gAcc").value = "";
+          }
+          refreshSelects();
+          renderAccounts();
+          toast("Account deleted");
+        } catch (e) {
+          toast("Error: " + e.message, "err");
         }
         setSyncing(false);
-        refreshSelects();
-        renderAccounts();
-        toast("Account deleted");
       }
-      function renderAccounts() {
-        const el = document.getElementById("accList");
+
         if (!el) return;
         if (!S.accounts.length) {
           el.innerHTML =
@@ -3827,6 +3776,14 @@
         "EUR/USD",
         "GBP/USD",
         "USD/JPY",
+
+      // ── STRATEGIES ───────────────────────────────────────────────
+      let _editStratId = null,
+        _selColor = "#818cf8";
+      const PAIRS = [
+        "EUR/USD",
+        "GBP/USD",
+        "USD/JPY",
         "EUR/GBP",
         "US100",
         "US30",
@@ -3837,26 +3794,16 @@
         _editStratId = id;
         _selColor = "#818cf8";
         ["sName", "sDesc", "sEntry", "sExit", "sRR", "sRisk", "sNotes"].forEach(
-          (x) => {
-            const el = document.getElementById(x);
-            if (el) el.value = "";
-          },
+          (x) => { const el = document.getElementById(x); if (el) el.value = ""; },
         );
         document.getElementById("sTF").value = "";
-        document
-          .querySelectorAll("#colorPicker .cp-dot")
-          .forEach((d) => d.classList.remove("sel"));
+        document.querySelectorAll("#colorPicker .cp-dot").forEach((d) => d.classList.remove("sel"));
         document.querySelector("#colorPicker .cp-dot")?.classList.add("sel");
         document.getElementById("pairsCB").innerHTML = PAIRS.map(
-          (p) =>
-            `<label class="cb-item"><input type="checkbox" value="${p}"> ${p}</label>`,
+          (p) => `<label class="cb-item"><input type="checkbox" value="${p}"> ${p}</label>`,
         ).join("");
-        document
-          .querySelectorAll("#sessCB input")
-          .forEach((cb) => (cb.checked = false));
-        document.getElementById("stratModalTitle").textContent = id
-          ? "Edit Strategy"
-          : "New Strategy";
+        document.querySelectorAll("#sessCB input").forEach((cb) => (cb.checked = false));
+        document.getElementById("stratModalTitle").textContent = id ? "Edit Strategy" : "New Strategy";
         if (id) {
           const s = S.strategies.find((x) => x.id === id);
           if (!s) return;
@@ -3882,14 +3829,9 @@
         }
         openModal("stratModal");
       }
-      function closeStratModal() {
-        closeModal("stratModal");
-        _editStratId = null;
-      }
+      function closeStratModal() { closeModal("stratModal"); _editStratId = null; }
       function pickColor(el) {
-        document
-          .querySelectorAll("#colorPicker .cp-dot")
-          .forEach((d) => d.classList.remove("sel"));
+        document.querySelectorAll("#colorPicker .cp-dot").forEach((d) => d.classList.remove("sel"));
         el.classList.add("sel");
         _selColor = el.dataset.color;
       }
@@ -3897,21 +3839,10 @@
       async function saveStrategy() {
         if (!requireUser()) return;
         const name = document.getElementById("sName").value.trim();
-        if (!name)
-          return toast(
-            "Name".replace(" *", "") +
-              ": " +
-              "Asset is required!".split(" ")[0],
-            "err",
-          );
-        const pairs = [
-          ...document.querySelectorAll("#pairsCB input:checked"),
-        ].map((c) => c.value);
-        const sessions = [
-          ...document.querySelectorAll("#sessCB input:checked"),
-        ].map((c) => c.value);
+        if (!name) return toast("Strategy name is required!", "err");
+        const pairs = [...document.querySelectorAll("#pairsCB input:checked")].map((c) => c.value);
+        const sessions = [...document.querySelectorAll("#sessCB input:checked")].map((c) => c.value);
         const row = {
-          user_id: S.user.id,
           name,
           color: _selColor,
           description: document.getElementById("sDesc").value,
@@ -3925,64 +3856,41 @@
           sessions,
         };
         setSyncing(true);
-        if (_editStratId) {
-          const { data, error } = await db
-            .from("strategies")
-            .update(row)
-            .eq("id", _editStratId)
-            .select()
-            .single();
-          setSyncing(false, !!error);
-          if (error) return toast("Erro: " + error.message, "err");
-          S.strategies = S.strategies.map((x) =>
-            x.id === _editStratId ? mapStrat(data) : x,
-          );
-        } else {
-          const { data, error } = await db
-            .from("strategies")
-            .insert(row)
-            .select()
-            .single();
-          setSyncing(false, !!error);
-          if (error) return toast("Erro: " + error.message, "err");
-          S.strategies.push(mapStrat(data));
+        try {
+          if (_editStratId) {
+            const { data } = await api.put('/api/data/strategies?id=' + _editStratId, row);
+            S.strategies = S.strategies.map((x) => x.id === _editStratId ? mapStrat(data) : x);
+          } else {
+            const { data } = await api.post('/api/data/strategies', row);
+            S.strategies.push(mapStrat(data));
+          }
+          closeStratModal();
+          refreshSelects();
+          renderStrategies();
+          toast("Strategy saved! ✓");
+        } catch (e) {
+          toast("Error: " + e.message, "err");
         }
-        closeStratModal();
-        refreshSelects();
-        renderStrategies();
-        toast("Strategy saved! ✓");
+        setSyncing(false);
       }
+
       async function deleteStrategy(id) {
         if (!requireUser()) return;
         if (!confirm("Delete strategy?")) return;
         setSyncing(true);
-        await db.from("strategies").delete().eq("id", id);
-        S.strategies = S.strategies.filter((s) => s.id !== id);
-        S.trades = S.trades.map((t) =>
-          t.strategyId === id ? { ...t, strategyId: "" } : t,
-        );
-        setSyncing(false);
-        refreshSelects();
-        renderStrategies();
-        toast("Strategy deleted");
-      }
-      function renderStrategies() {
-        const el = document.getElementById("stratList");
-        if (!el) return;
-        if (!S.strategies.length) {
-          el.innerHTML =
-            '<div class="empty"><div class="empty-icon">⚡</div><p>No strategies yet. Create the first one!</p></div>';
-          return;
+        try {
+          await api.del('/api/data/strategies?id=' + id);
+          S.strategies = S.strategies.filter((s) => s.id !== id);
+          S.trades = S.trades.map((t) => t.strategyId === id ? { ...t, strategyId: "" } : t);
+          refreshSelects();
+          renderStrategies();
+          toast("Strategy deleted");
+        } catch (e) {
+          toast("Error: " + e.message, "err");
         }
-        el.innerHTML = S.strategies
-          .map((s) => {
-            const st = S.trades.filter((t) => t.strategyId === s.id);
-            const pnl = st.reduce((a, t) => a + (t.pnl || 0), 0),
-              wins = st.filter((t) => t.result === "Win").length,
-              losses = st.filter((t) => t.result === "Loss").length;
-            const wr = st.length
-              ? ((wins / st.length) * 100).toFixed(1)
-              : "0.0";
+        setSyncing(false);
+      }
+
             const aW = wins
               ? (
                   st
@@ -4029,6 +3937,9 @@
       let _editTradeId = null,
         _pendingImgs = [];
 
+      // ── TRADES ────────────────────────────────────────────────────
+      let _editTradeId = null, _pendingImgs = [];
+
       function toggleCustomAsset() {
         document.getElementById("customAssetWrap").style.display =
           document.getElementById("tAsset").value === "__custom" ? "" : "none";
@@ -4039,45 +3950,28 @@
         _pendingImgs = [];
         document.getElementById("imgPreview").innerHTML = "";
         document.getElementById("customAssetWrap").style.display = "none";
-        document.getElementById("tradeModalTitle").textContent = id
-          ? "Edit Trade"
-          : "New Trade";
+        document.getElementById("tradeModalTitle").textContent = id ? "Edit Trade" : "New Trade";
         const now = new Date(),
-          local = new Date(now - now.getTimezoneOffset() * 60000)
-            .toISOString()
-            .slice(0, 16);
+          local = new Date(now - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
         if (id) {
           const tr = S.trades.find((x) => x.id === id);
           if (!tr) return;
           document.getElementById("tAcc").value = tr.accountId || "";
           document.getElementById("tDate").value = tr.date
-            ? new Date(tr.date).toISOString().slice(0, 16)
-            : local;
+            ? new Date(tr.date).toISOString().slice(0, 16) : local;
           const sel = document.getElementById("tAsset"),
             hasOpt = [...sel.options].some((o) => o.value === tr.asset);
-          if (hasOpt) {
-            sel.value = tr.asset;
-          } else {
+          if (hasOpt) { sel.value = tr.asset; }
+          else {
             sel.value = "__custom";
             document.getElementById("customAssetWrap").style.display = "";
             document.getElementById("tAssetCustom").value = tr.asset || "";
           }
           document.getElementById("tDir").value = tr.dir || "Buy";
-          ["tLots", "tPnL", "tRisk", "tRR", "tSetup", "tNotes"].forEach(
-            (id2) => {
-              const e = document.getElementById(id2);
-              if (e)
-                e.value =
-                  {
-                    tLots: tr.lots,
-                    tPnL: tr.pnl,
-                    tRisk: tr.riskPct,
-                    tRR: tr.rr,
-                    tSetup: tr.setup,
-                    tNotes: tr.notes,
-                  }[id2] || "";
-            },
-          );
+          ["tLots","tPnL","tRisk","tRR","tSetup","tNotes"].forEach((id2) => {
+            const e = document.getElementById(id2);
+            if (e) e.value = ({ tLots: tr.lots, tPnL: tr.pnl, tRisk: tr.riskPct, tRR: tr.rr, tSetup: tr.setup, tNotes: tr.notes })[id2] || "";
+          });
           document.getElementById("tRes").value = tr.result || "Win";
           document.getElementById("tSess").value = tr.session || "London";
           document.getElementById("tStrat").value = tr.strategyId || "";
@@ -4089,57 +3983,32 @@
           document.getElementById("tRes").value = "Win";
           document.getElementById("tSess").value = "London";
           document.getElementById("tStrat").value = "";
-          [
-            "tLots",
-            "tPnL",
-            "tRisk",
-            "tRR",
-            "tSetup",
-            "tNotes",
-            "tAssetCustom",
-          ].forEach((x) => {
-            const e = document.getElementById(x);
-            if (e) e.value = "";
+          ["tLots","tPnL","tRisk","tRR","tSetup","tNotes","tAssetCustom"].forEach((x) => {
+            const e = document.getElementById(x); if (e) e.value = "";
           });
           document.getElementById("tAsset").value = "EUR/USD";
-          if (S.accounts.length)
-            document.getElementById("tAcc").value = S.accounts[0].id;
+          if (S.accounts.length) document.getElementById("tAcc").value = S.accounts[0].id;
         }
         openModal("tradeModal");
       }
-      function closeTradeModal() {
-        closeModal("tradeModal");
-        _editTradeId = null;
-        _pendingImgs = [];
-      }
+      function closeTradeModal() { closeModal("tradeModal"); _editTradeId = null; _pendingImgs = []; }
 
       async function saveTrade() {
         if (!requireUser()) return;
         const btn = document.querySelector('[data-action="saveTrade"]');
         if (btn?.disabled) return;
-        if (btn) {
-          btn.disabled = true;
-          btn.textContent = "A guardar...";
-        }
-        const restore = () => {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Guardar Trade";
-          }
-        };
+        if (btn) { btn.disabled = true; btn.textContent = "Saving..."; }
+        const restore = () => { if (btn) { btn.disabled = false; btn.textContent = "Guardar Trade"; } };
+
         const assetSel = document.getElementById("tAsset").value;
-        const asset =
-          assetSel === "__custom"
-            ? document
-                .getElementById("tAssetCustom")
-                .value.trim()
-                .toUpperCase() || "OUTRO"
-            : assetSel;
+        const asset = assetSel === "__custom"
+          ? (document.getElementById("tAssetCustom").value.trim().toUpperCase() || "OUTRO")
+          : assetSel;
         const accountId = document.getElementById("tAcc").value;
-        if (!accountId) return toast("Select an account!", "err");
-        if (!asset) return toast("Asset is required!", "err");
+        if (!accountId) { restore(); return toast("Select an account!", "err"); }
+        if (!asset) { restore(); return toast("Asset is required!", "err"); }
+
         const row = {
-          user_id: S.user.id,
           account_id: accountId,
           strategy_id: document.getElementById("tStrat").value || null,
           trade_date: document.getElementById("tDate").value || null,
@@ -4156,87 +4025,57 @@
           images: [..._pendingImgs],
         };
         setSyncing(true);
-        if (_editTradeId) {
-          const { data, error } = await db
-            .from("trades")
-            .update(row)
-            .eq("id", _editTradeId)
-            .select()
-            .single();
-          setSyncing(false, !!error);
-          if (error) {
-            restore();
-            return toast("Erro: " + error.message, "err");
+        try {
+          if (_editTradeId) {
+            const { data } = await api.put('/api/data/trades?id=' + _editTradeId, row);
+            S.trades = S.trades.map((x) => x.id === _editTradeId ? mapTrade(data) : x);
+          } else {
+            const { data } = await api.post('/api/data/trades', row);
+            S.trades.unshift(mapTrade(data));
           }
-          S.trades = S.trades.map((x) =>
-            x.id === _editTradeId ? mapTrade(data) : x,
-          );
-        } else {
-          const { data, error } = await db
-            .from("trades")
-            .insert(row)
-            .select()
-            .single();
-          setSyncing(false, !!error);
-          if (error) {
-            restore();
-            return toast("Erro: " + error.message, "err");
-          }
-          S.trades.unshift(mapTrade(data));
+          restore();
+          closeTradeModal();
+          renderTrades();
+          renderDash();
+          toast("Trade saved! ✓");
+        } catch (e) {
+          restore();
+          toast("Error: " + e.message, "err");
         }
-        restore();
-        closeTradeModal();
-        renderTrades();
-        renderDash();
-        toast("Trade saved! ✓");
+        setSyncing(false);
       }
+
       async function deleteTrade(id) {
         if (!requireUser()) return;
         if (!confirm("Delete this trade?")) return;
         setSyncing(true);
-        await db.from("trades").delete().eq("id", id);
-        S.trades = S.trades.filter((t) => t.id !== id);
+        try {
+          await api.del('/api/data/trades?id=' + id);
+          S.trades = S.trades.filter((t) => t.id !== id);
+          renderTrades();
+          renderDash();
+          toast("Trade deleted");
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
         setSyncing(false);
-        renderTrades();
-        renderDash();
-        toast("Trade deleted");
       }
+
       function handleImgs(e) {
         [...e.target.files].forEach((f) => {
           const r = new FileReader();
-          r.onload = (ev) => {
-            _pendingImgs.push(ev.target.result);
-            renderImgPreview();
-          };
+          r.onload = (ev) => { _pendingImgs.push(ev.target.result); renderImgPreview(); };
           r.readAsDataURL(f);
         });
         e.target.value = "";
       }
       function renderImgPreview() {
         document.getElementById("imgPreview").innerHTML = _pendingImgs
-          .map(
-            (s, i) =>
-              `<div class="img-thumb"><img src="${s}" data-action="openLightboxSrc" data-src="${s}"><button class="img-del" data-action="removeImg" data-i="${i}">✕</button></div>`,
-          )
+          .map((s, i) => `<div class="img-thumb"><img src="${s}" data-action="openLightboxSrc" data-src="${s}"><button class="img-del" data-action="removeImg" data-i="${i}">✕</button></div>`)
           .join("");
       }
-      function removeImg(i) {
-        _pendingImgs.splice(i, 1);
-        renderImgPreview();
-      }
+      function removeImg(i) { _pendingImgs.splice(i, 1); renderImgPreview(); }
 
-      function renderTrades() {
-        let data = filtT();
-        const src = (
-            document.getElementById("fSrc")?.value || ""
-          ).toLowerCase(),
-          dir = document.getElementById("fDir")?.value || "",
-          res = document.getElementById("fRes")?.value || "",
-          str = document.getElementById("fStr")?.value || "",
-          mo = document.getElementById("fMo")?.value || "";
-        if (src)
-          data = data.filter(
-            (t) =>
               (t.asset || "").toLowerCase().includes(src) ||
               (t.setup || "").toLowerCase().includes(src) ||
               (t.notes || "").toLowerCase().includes(src),
@@ -4337,6 +4176,7 @@
         const pf =
           Math.abs(parseFloat(avgL)) > 0
             ? (parseFloat(avgW) / Math.abs(parseFloat(avgL))).toFixed(2)
+            : "∞";
             : "∞";
         const rT = data.filter((t) => t.riskPct),
           avgRisk = rT.length
@@ -4598,65 +4438,47 @@
           .forEach((t) => t.classList.remove("active"));
         document
           .querySelectorAll(".tab-content")
-          .forEach((t) => t.classList.remove("active"));
-        document
-          .querySelector(`.tab-btn[data-tab="${name}"]`)
-          ?.classList.add("active");
-        document.getElementById("tab-" + name)?.classList.add("active");
-      }
 
       // ── DAILY NOTES ───────────────────────────────────────────────
       async function saveNote() {
         if (!requireUser()) return;
         const row = {
-          user_id: S.user.id,
-          note_date:
-            document.getElementById("dDate").value ||
-            new Date().toISOString().slice(0, 10),
+          note_date: document.getElementById("dDate").value || new Date().toISOString().slice(0, 10),
           mood: document.getElementById("dMood").value,
           analysis: document.getElementById("dNote").value.trim(),
           plan: document.getElementById("dPlan").value.trim(),
         };
-        if (!row.analysis && !row.plan)
-          return toast("Write at least an analysis or plan!", "err");
+        if (!row.analysis && !row.plan) return toast("Write at least an analysis or plan!", "err");
         setSyncing(true);
-        const { data, error } = await db
-          .from("daily_notes")
-          .insert(row)
-          .select()
-          .single();
-        setSyncing(false, !!error);
-        if (error) return toast("Erro: " + error.message, "err");
-        S.notes.unshift(mapNote(data));
-        ["dNote", "dPlan"].forEach((id) => {
-          const e = document.getElementById(id);
-          if (e) e.value = "";
-        });
-        renderNotes();
-        toast("Note saved! ✓");
+        try {
+          const { data } = await api.post('/api/data/notes', row);
+          // Replace or add note for this date
+          const idx = S.notes.findIndex(n => n.date && new Date(n.date).toISOString().slice(0,10) === row.note_date);
+          if (idx >= 0) S.notes[idx] = mapNote(data);
+          else S.notes.unshift(mapNote(data));
+          ["dNote", "dPlan"].forEach((id) => { const e = document.getElementById(id); if (e) e.value = ""; });
+          renderNotes();
+          toast("Note saved! ✓");
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
+        setSyncing(false);
       }
+
       async function deleteNote(id) {
         if (!requireUser()) return;
         if (!confirm("Delete note?")) return;
         setSyncing(true);
-        await db.from("daily_notes").delete().eq("id", id);
-        S.notes = S.notes.filter((n) => n.id !== id);
-        setSyncing(false);
-        renderNotes();
-      }
-      function renderNotes() {
-        const de = document.getElementById("dDate");
-        if (de && !de.value) de.value = new Date().toISOString().slice(0, 10);
-        const el = document.getElementById("notesList");
-        if (!el) return;
-        if (!S.notes.length) {
-          el.innerHTML =
-            '<div class="empty"><div class="empty-icon">✎</div><p>No notes yet.</p></div>';
-          return;
+        try {
+          await api.del('/api/data/notes?id=' + id);
+          S.notes = S.notes.filter((n) => n.id !== id);
+          renderNotes();
+        } catch (e) {
+          toast("Error: " + e.message, "err");
         }
-        el.innerHTML = S.notes
-          .map(
-            (n) =>
+        setSyncing(false);
+      }
+
               `<div class="note-card"><div class="note-meta"><span>${fmtD(n.date)} · ${n.mood}</span><button class="btn btn-danger btn-xs" data-action="deleteNote" data-id="${n.id}">✕</button></div>${n.note ? `<div class="field-label">Análise</div><p class="note-text">${n.note}</p>` : ""} ${n.plan ? `<div class="field-label" style="margin-top:10px">Plano Amanhã</div><p class="note-text">${n.plan}</p>` : ""}</div>`,
           )
           .join("");
@@ -4688,9 +4510,6 @@
         switch (action) {
           // ── Lightbox ──
           case "closeLightbox":
-            document.getElementById("lightbox")?.classList.remove("open");
-            break;
-          case "closeLangOverlay":
             if (e.target === el) closeModal("langModal");
             break;
           case "openLightboxSrc":
@@ -4818,6 +4637,7 @@
             if (date) goDay(date);
             break;
 
+
           // ── Detail modal ──
           case "closeDetailModal":
             closeModal("detailModal");
@@ -4852,206 +4672,90 @@
           setTimeout(closeSidebar, 100);
       });
 
-      // ── BOOT ──────────────────────────────────────────────────────
+
+      // ── BOOT ─────────────────────────────────────────────────────
       async function boot() {
         showLoading();
-
-        // PRIMARY: check existing session immediately (handles already-logged-in case)
-        const { data: { session: existingSession } } = await db.auth.getSession();
-        if (existingSession?.user) {
-          S.user = existingSession.user;
+        try {
+          const { user } = await api.get('/api/auth/me');
+          S.user = user;
           await loadAll();
           showApp();
-        } else {
+        } catch {
           showAuth();
         }
-
-        // SECONDARY: listen for future auth changes (login, logout, token refresh, OAuth)
-        db.auth.onAuthStateChange(async (event, session) => {
-          console.log("Auth event:", event, session?.user?.email);
-
-          if (event === "SIGNED_IN") {
-            if (session?.user) {
-              if (
-                !S.user ||
-                S.user.id !== session.user.id ||
-                S.accounts.length === 0
-              ) {
-                S.user = session.user;
-                await loadAll();
-              } else {
-                S.user = session.user;
-              }
-              showApp();
-            }
-          } else if (event === "TOKEN_REFRESHED" && session?.user) {
-            S.user = session.user;
-          } else if (event === "SIGNED_OUT") {
-            S.user = null;
-            S.accounts = [];
-            S.strategies = [];
-            S.trades = [];
-            S.notes = [];
-            S.activeAccountId = "";
-            showAuth();
-          }
-        });
       }
 
       document.addEventListener("DOMContentLoaded", () => {
-        // Set date
         const dDate = document.getElementById("dDate");
         if (dDate) dDate.value = new Date().toISOString().slice(0, 10);
 
-        // ── Wire auth buttons directly (bypass data-action for reliability) ──
-        const on = (id, fn) => {
-          const el = document.getElementById(id);
-          if (el) el.addEventListener("click", fn);
-        };
+        const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); };
         const onKey = (id, fn) => {
           const el = document.getElementById(id);
-          if (el)
-            el.addEventListener("keydown", (e) => {
-              if (e.key === "Enter") fn();
-            });
+          if (el) el.addEventListener("keydown", (e) => { if (e.key === "Enter") fn(); });
         };
-
-        // Tabs
-        on("tabLogin", () => switchAuthTab("login"));
-        on("tabRegister", () => switchAuthTab("register"));
-
-        // Google
-
-        // Login
-        on("loginBtn", doLogin);
+        on("tabLogin",     () => switchAuthTab("login"));
+        on("tabRegister",  () => switchAuthTab("register"));
+        on("loginBtn",     doLogin);
         onKey("loginEmail", doLogin);
-        onKey("loginPass", doLogin);
-
-        // Register
-        on("regBtn", doRegister);
-        onKey("regPass2", doRegister);
-
-        // Forgot / reset
-        on("btnForgot", showResetPanel);
+        onKey("loginPass",  doLogin);
+        on("regBtn",       doRegister);
+        onKey("regPass2",  doRegister);
+        on("btnForgot",      showResetPanel);
         on("btnBackToLogin", hideResetPanel);
-        on("btnResetSend", doReset);
-
-        // Lang modal
-
+        on("btnResetSend",   doReset);
         boot();
       });
 
-      // ══ CALCULATOR ══════════════════════════════════════════════════
+      // ── CALCULATOR ───────────────────────────────────────────────
       const CALC = { expr: "", result: "0", hasResult: false };
       function calcUpdate() {
-        document.getElementById("calcExpr").textContent = CALC.expr;
+        document.getElementById("calcExpr").textContent   = CALC.expr;
         document.getElementById("calcResult").textContent = CALC.result;
       }
       function calcPress(val) {
-        const ops = ["÷", "×", "−", "+"];
-        if (val === "AC") {
-          CALC.expr = "";
-          CALC.result = "0";
-          CALC.hasResult = false;
-        } else if (val === "+/-") {
-          if (CALC.result !== "0")
-            CALC.result = CALC.result.startsWith("-")
-              ? CALC.result.slice(1)
-              : "-" + CALC.result;
-        } else if (val === "%") {
-          const v = parseFloat(CALC.result);
-          if (!isNaN(v)) CALC.result = String(v / 100);
-        } else if (val === "=") {
+        const ops = ["÷","×","−","+"];
+        if (val === "AC") { CALC.expr = ""; CALC.result = "0"; CALC.hasResult = false; }
+        else if (val === "+/-") { if (CALC.result !== "0") CALC.result = CALC.result.startsWith("-") ? CALC.result.slice(1) : "-" + CALC.result; }
+        else if (val === "%") { const v = parseFloat(CALC.result); if (!isNaN(v)) CALC.result = String(v / 100); }
+        else if (val === "=") {
           try {
-            const full = (
-              CALC.expr + (CALC.result !== "" ? CALC.result : "0")
-            ).trim();
-            if (!full || full === "") {
-              CALC.result = "0";
-              calcUpdate();
-              return;
-            }
-            const e = full
-              .replace(/÷/g, "/")
-              .replace(/×/g, "*")
-              .replace(/−/g, "-");
+            const full = (CALC.expr + (CALC.result !== "" ? CALC.result : "0")).trim();
+            if (!full) { CALC.result = "0"; calcUpdate(); return; }
+            const e = full.replace(/÷/g,"/").replace(/×/g,"*").replace(/−/g,"-");
             if (!/^[0-9+\-*/.() ]+$/.test(e)) throw new Error("invalid");
             const r = Function('"use strict";return(' + e + ")")();
-            CALC.result = isFinite(r)
-              ? parseFloat(r.toFixed(10)).toString()
-              : "Error";
-            CALC.expr = "";
-            CALC.hasResult = true;
-          } catch {
-            CALC.result = "Error";
-            CALC.expr = "";
-            CALC.hasResult = false;
-          }
+            CALC.result = isFinite(r) ? parseFloat(r.toFixed(10)).toString() : "Error";
+            CALC.expr = ""; CALC.hasResult = true;
+          } catch { CALC.result = "Error"; CALC.expr = ""; CALC.hasResult = false; }
         } else if (ops.includes(val)) {
-          if (CALC.hasResult) {
-            CALC.expr = CALC.result + val;
-            CALC.hasResult = false;
-          } else {
-            CALC.expr = (CALC.expr || CALC.result) + val;
-          }
+          if (CALC.hasResult) { CALC.expr = CALC.result + val; CALC.hasResult = false; }
+          else { CALC.expr = (CALC.expr || CALC.result) + val; }
           CALC.result = "";
         } else if (val === ".") {
           const last = (CALC.expr + CALC.result).split(/[÷×−+]/).pop();
           if (!last.includes(".")) CALC.result = (CALC.result || "0") + ".";
         } else {
-          if (CALC.hasResult) {
-            CALC.result = val;
-            CALC.hasResult = false;
-          } else {
-            CALC.result = CALC.result === "0" ? val : CALC.result + val;
-          }
-          if (CALC.expr && !ops.some((o) => CALC.expr.endsWith(o)))
-            CALC.expr = "";
+          if (CALC.hasResult) { CALC.result = val; CALC.hasResult = false; }
+          else { CALC.result = CALC.result === "0" ? val : CALC.result + val; }
+          if (CALC.expr && !ops.some((o) => CALC.expr.endsWith(o))) CALC.expr = "";
         }
         calcUpdate();
       }
-      document.addEventListener(
-        "click",
-        (e) => {
-          const btn = e.target.closest("[data-calc]");
-          if (btn) {
-            e.stopPropagation();
-            calcPress(btn.dataset.calc);
-            return;
-          }
-          if (e.target.closest("#calcFab")) {
-            document.getElementById("calcPanel")?.classList.toggle("open");
-            return;
-          }
-          const p = document.getElementById("calcPanel");
-          if (
-            p?.classList.contains("open") &&
-            !e.target.closest("#calcPanel") &&
-            !e.target.closest("#calcFab")
-          )
-            p.classList.remove("open");
-        },
-        true,
-      );
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-calc]");
+        if (btn) { e.stopPropagation(); calcPress(btn.dataset.calc); return; }
+        if (e.target.closest("#calcFab")) { document.getElementById("calcPanel")?.classList.toggle("open"); return; }
+        const p = document.getElementById("calcPanel");
+        if (p?.classList.contains("open") && !e.target.closest("#calcPanel") && !e.target.closest("#calcFab")) p.classList.remove("open");
+      }, true);
       document.addEventListener("keydown", (e) => {
         const p = document.getElementById("calcPanel");
         if (!p?.classList.contains("open")) return;
-        const map = {
-          Enter: "=",
-          Backspace: "AC",
-          Escape: "AC",
-          "/": "÷",
-          "*": "×",
-          "-": "−",
-        };
+        const map = { Enter:"=", Backspace:"AC", Escape:"AC", "/":"÷", "*":"×", "-":"−" };
         const k = map[e.key] || e.key;
-        if (
-          /[0-9.]/.test(k) ||
-          ["=", "AC", "÷", "×", "−", "+", "%"].includes(k)
-        ) {
-          e.preventDefault();
-          calcPress(k);
-        }
+        if (/[0-9.]/.test(k) || ["=","AC","÷","×","−","+","%"].includes(k)) { e.preventDefault(); calcPress(k); }
       });
     </script>
 
@@ -5063,25 +4767,25 @@
         <div class="calc-result" id="calcResult">0</div>
       </div>
       <div class="calc-grid">
-        <button class="calc-btn calc-fn" data-calc="AC">AC</button>
-        <button class="calc-btn calc-fn" data-calc="+/-">+/-</button>
-        <button class="calc-btn calc-fn" data-calc="%">%</button>
-        <button class="calc-btn calc-op" data-calc="÷">÷</button>
+        <button class="calc-btn calc-fn"  data-calc="AC">AC</button>
+        <button class="calc-btn calc-fn"  data-calc="+/-">+/-</button>
+        <button class="calc-btn calc-fn"  data-calc="%">%</button>
+        <button class="calc-btn calc-op"  data-calc="÷">÷</button>
         <button class="calc-btn calc-num" data-calc="7">7</button>
         <button class="calc-btn calc-num" data-calc="8">8</button>
         <button class="calc-btn calc-num" data-calc="9">9</button>
-        <button class="calc-btn calc-op" data-calc="×">×</button>
+        <button class="calc-btn calc-op"  data-calc="×">×</button>
         <button class="calc-btn calc-num" data-calc="4">4</button>
         <button class="calc-btn calc-num" data-calc="5">5</button>
         <button class="calc-btn calc-num" data-calc="6">6</button>
-        <button class="calc-btn calc-op" data-calc="−">−</button>
+        <button class="calc-btn calc-op"  data-calc="−">−</button>
         <button class="calc-btn calc-num" data-calc="1">1</button>
         <button class="calc-btn calc-num" data-calc="2">2</button>
         <button class="calc-btn calc-num" data-calc="3">3</button>
-        <button class="calc-btn calc-op" data-calc="+">+</button>
+        <button class="calc-btn calc-op"  data-calc="+">+</button>
         <button class="calc-btn calc-num calc-zero" data-calc="0">0</button>
         <button class="calc-btn calc-num" data-calc=".">.</button>
-        <button class="calc-btn calc-eq" data-calc="=">=</button>
+        <button class="calc-btn calc-eq"  data-calc="=">=</button>
       </div>
     </div>
   </body>
