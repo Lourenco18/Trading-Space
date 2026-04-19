@@ -1,4 +1,4 @@
-# Trading Space — MySQL + Vercel Edition
+# Trading Space
 
 A prop-firm trading journal running on **Next.js** + **MySQL**, deployed on **Vercel**.  
 
@@ -7,6 +7,7 @@ A prop-firm trading journal running on **Next.js** + **MySQL**, deployed on **Ve
 
 ### First Visit
 https://trading-space.vercel.app/
+
 2. Click **Create Account** → enter email + password → you're in
 3. Your session is stored in a secure httpOnly cookie — you stay logged in for 30 days
 
