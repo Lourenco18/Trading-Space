@@ -4479,6 +4479,18 @@
         setSyncing(false);
       }
 
+      function renderNotes() {
+        const de = document.getElementById("dDate");
+        if (de && !de.value) de.value = new Date().toISOString().slice(0, 10);
+        const el = document.getElementById("notesList");
+        if (!el) return;
+        if (!S.notes.length) {
+          el.innerHTML = '<div class="empty"><div class="empty-icon">✎</div><p>No notes yet.</p></div>';
+          return;
+        }
+        el.innerHTML = S.notes
+          .map(
+            (n) =>
               `<div class="note-card"><div class="note-meta"><span>${fmtD(n.date)} · ${n.mood}</span><button class="btn btn-danger btn-xs" data-action="deleteNote" data-id="${n.id}">✕</button></div>${n.note ? `<div class="field-label">Análise</div><p class="note-text">${n.note}</p>` : ""} ${n.plan ? `<div class="field-label" style="margin-top:10px">Plano Amanhã</div><p class="note-text">${n.plan}</p>` : ""}</div>`,
           )
           .join("");
@@ -4510,7 +4522,7 @@
         switch (action) {
           // ── Lightbox ──
           case "closeLightbox":
-            if (e.target === el) closeModal("langModal");
+            document.getElementById("lightbox")?.classList.remove("open");
             break;
           case "openLightboxSrc":
             if (src) {
