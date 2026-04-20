@@ -5,6 +5,19 @@ const { signToken, setAuthCookie } = require('../../../lib/auth');
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
+  // Diagnóstico — confirmar variáveis de ambiente
+  const envCheck = {
+    MYSQL_HOST:     !!process.env.MYSQL_HOST,
+    MYSQL_USER:     !!process.env.MYSQL_USER,
+    MYSQL_PASSWORD: !!process.env.MYSQL_PASSWORD,
+    MYSQL_DATABASE: !!process.env.MYSQL_DATABASE,
+    JWT_SECRET:     !!process.env.JWT_SECRET,
+  };
+  const missingEnv = Object.entries(envCheck).filter(([,v]) => !v).map(([k]) => k);
+  if (missingEnv.length > 0) {
+    return res.status(500).json({ error: 'Missing env vars: ' + missingEnv.join(', ') });
+  }
+
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
@@ -20,7 +33,7 @@ module.exports = async function handler(req, res) {
     setAuthCookie(res, token);
     return res.status(200).json({ user: { id: user.id, email: user.email } });
   } catch (err) {
-    console.error('[login]', err.message);
+    console.error('[login error]', err.message);
     return res.status(500).json({ error: err.message });
   }
 };
