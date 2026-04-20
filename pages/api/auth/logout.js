@@ -1,8 +1,7 @@
-// pages/api/auth/logout.js
-import { clearAuthCookie } from '../../../lib/auth';
+const { clearAuthCookie } = require('../../../lib/auth');
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   clearAuthCookie(res);
   return res.status(200).json({ ok: true });
-}
+};
