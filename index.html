@@ -2098,9 +2098,10 @@
                 <div class="page-title">Journal</div>
                 <div class="page-sub">// todas as operações</div>
               </div>
-              <button class="btn btn-primary" data-action="openTradeModal">
-                + New Trade
-              </button>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button class="btn btn-primary" data-action="openTradeModal">+ New Trade</button>
+                <button class="btn btn-secondary" data-action="openCsvModal" style="display:flex;align-items:center;gap:6px">⬆ Importar CSV</button>
+              </div>
             </div>
             <div class="filter-row">
               <input
@@ -3196,7 +3197,7 @@
               <optgroup label="CVD">
                 <option>US100</option>
                 <option>US30</option>
-                <option>XAUUSD</option>
+                <option>XAU</option>
               </optgroup>
               <option value="__custom">Outro (personalizado)...</option>
             </select>
@@ -3477,7 +3478,7 @@
       async function loadAll() {
         setSyncing(true);
         try {
-          const data = await api.get("/api/data/load");
+          const data = await api.get("api/load.php");
           const parseJ = (v) => { if (!v) return []; if (Array.isArray(v)) return v; try { return JSON.parse(v); } catch { return []; } };
           S.accounts   = (data.accounts   || []).map(mapAcc);
           S.strategies = (data.strategies || []).map(r => mapStrat({...r, pairs: parseJ(r.pairs), sessions: parseJ(r.sessions)}));
@@ -3538,7 +3539,7 @@
         btn.textContent = "Signing in...";
 
         try {
-          const { user } = await api.post("/api/auth/login", { email, password: pass });
+          const { user } = await api.post("api/auth.php?action=login", { email, password: pass });
           S.user = user;
           await loadAll();
           showApp();
@@ -3579,7 +3580,7 @@
         btn.textContent = "Creating account...";
 
         try {
-          const { user } = await api.post("/api/auth/register", { email, password: pass });
+          const { user } = await api.post("api/auth.php?action=register", { email, password: pass });
           S.user = user;
           await loadAll();
           showApp();
@@ -3606,7 +3607,7 @@
         ok.style.display = "block";
       }
       async function doLogout() {
-        try { await api.post("/api/auth/logout"); } catch (e) { console.error(e); }
+        try { await api.post("api/auth.php?action=logout"); } catch (e) { console.error(e); }
         S.user = null;
         S.accounts = [];
         S.strategies = [];
@@ -3671,7 +3672,7 @@
         };
         setSyncing(true);
         try {
-          const { data } = await api.post("/api/data/accounts", row);
+          const { data } = await api.post("api/accounts.php", row);
           S.accounts.push(mapAcc(data));
           ["aN", "aF", "aC", "aS", "aPT", "aDD", "aDDD"].forEach(
             (id) => (document.getElementById(id).value = ""),
@@ -3687,7 +3688,7 @@
         if (!confirm("Delete account and all its trades?")) return;
         setSyncing(true);
         try {
-          await api.del("/api/data/accounts?id=" + id);
+          await api.del("api/accounts.php?id=" + id);
           S.accounts = S.accounts.filter((a) => a.id !== id);
           S.trades = S.trades.filter((t) => t.accountId !== id);
           if (S.activeAccountId === id) {
@@ -3876,10 +3877,10 @@
         setSyncing(true);
         try {
           if (_editStratId) {
-            const { data } = await api.put("/api/data/strategies?id=" + _editStratId, row);
+            const { data } = await api.put("api/strategies.php?id=" + _editStratId, row);
             S.strategies = S.strategies.map((x) => x.id === _editStratId ? mapStrat(data) : x);
           } else {
-            const { data } = await api.post("/api/data/strategies", row);
+            const { data } = await api.post("api/strategies.php", row);
             S.strategies.push(mapStrat(data));
           }
           closeStratModal();
@@ -3894,7 +3895,7 @@
         if (!confirm("Delete strategy?")) return;
         setSyncing(true);
         try {
-          await api.del("/api/data/strategies?id=" + id);
+          await api.del("api/strategies.php?id=" + id);
           S.strategies = S.strategies.filter((s) => s.id !== id);
           S.trades = S.trades.map((t) => t.strategyId === id ? { ...t, strategyId: "" } : t);
           refreshSelects();
@@ -4095,10 +4096,10 @@
         setSyncing(true);
         try {
           if (_editTradeId) {
-            const { data } = await api.put("/api/data/trades?id=" + _editTradeId, row);
+            const { data } = await api.put("api/trades.php?id=" + _editTradeId, row);
             S.trades = S.trades.map((x) => x.id === _editTradeId ? mapTrade(data) : x);
           } else {
-            const { data } = await api.post("/api/data/trades", row);
+            const { data } = await api.post("api/trades.php", row);
             S.trades.unshift(mapTrade(data));
           }
           restore();
@@ -4114,7 +4115,7 @@
         if (!confirm("Delete this trade?")) return;
         setSyncing(true);
         try {
-          await api.del("/api/data/trades?id=" + id);
+          await api.del("api/trades.php?id=" + id);
           S.trades = S.trades.filter((t) => t.id !== id);
           renderTrades();
           renderDash();
@@ -4542,7 +4543,7 @@
           return toast("Write at least an analysis or plan!", "err");
         setSyncing(true);
         try {
-          const { data } = await api.post("/api/data/notes", row);
+          const { data } = await api.post("api/notes.php", row);
           const idx = S.notes.findIndex(n => n.date && new Date(n.date).toISOString().slice(0,10) === row.note_date);
           if (idx >= 0) S.notes[idx] = mapNote(data); else S.notes.unshift(mapNote(data));
           ["dNote", "dPlan"].forEach((id) => { const e = document.getElementById(id); if (e) e.value = ""; });
@@ -4556,7 +4557,7 @@
         if (!confirm("Delete note?")) return;
         setSyncing(true);
         try {
-          await api.del("/api/data/notes?id=" + id);
+          await api.del("api/notes.php?id=" + id);
           S.notes = S.notes.filter((n) => n.id !== id);
           renderNotes();
         } catch (e) { toast("Error: " + e.message, "err"); }
@@ -4740,6 +4741,24 @@
           case "closeDetailModal":
             closeModal("detailModal");
             break;
+
+          // ── CSV Import ──
+          case "openCsvModal":
+            openCsvModal();
+            break;
+          case "exportTodayTrades":
+            exportTodayTrades();
+            break;
+          case "closeCsvModal":
+            closeModal("csvImportModal");
+            break;
+          case "importCsvTrades":
+            importCsvTrades();
+            break;
+          case "csvBack":
+            document.getElementById("csvStep2").style.display = "none";
+            document.getElementById("csvStep1").style.display = "";
+            break;
         }
       });
 
@@ -4774,7 +4793,7 @@
       async function boot() {
         showLoading();
         try {
-          const { user } = await api.get("/api/auth/me");
+          const { user } = await api.get("api/auth.php?action=me");
           S.user = user;
           await loadAll();
           showApp();
@@ -4938,6 +4957,264 @@
           calcPress(k);
         }
       });
+
+
+      // ── EXPORTAR TRADES DO DIA ────────────────────────────────────────────────
+
+      let _csvRows = [];
+      let _csvFile = null;
+
+      function openCsvModal() {
+        // Populate account selector
+        const sel = document.getElementById('csvAccountSel');
+        if (sel) sel.innerHTML = S.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+        // Reset to step 1
+        document.getElementById('csvStep1').style.display = '';
+        document.getElementById('csvStep2').style.display = 'none';
+        document.getElementById('csvError').style.display = 'none';
+        document.getElementById('csvFileInput').value = '';
+        _csvRows = [];
+        openModal('csvImportModal');
+      }
+
+      function splitCsvLine(line, sep) {
+        const result = [];
+        let cur = '', inQ = false;
+        for (const ch of line) {
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === sep && !inQ) { result.push(cur); cur = ''; }
+          else cur += ch;
+        }
+        result.push(cur);
+        return result;
+      }
+
+      function parseTradingViewCsv(text) {
+        const lines = text.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        if (lines.length < 2) return [];
+        const sep = lines[0].includes(';') ? ';' : ',';
+        const headers = lines[0].split(sep).map(h => h.replace(/"/g, '').trim().toLowerCase());
+        const col = (...names) => { for (const n of names) { const i = headers.findIndex(h => h.includes(n)); if (i !== -1) return i; } return -1; };
+
+        // Trading Journal columns: Date/Time, Symbol, Type, Side, Price, Qty, Commission, PnL, Notes
+        const iDate  = col('date/time', 'date', 'time', 'data');
+        const iSym   = col('symbol', 'ticker', 'instrument', 'market');
+        const iSide  = col('side', 'type', 'direction', 'action');
+        const iPrice = col('price', 'fill price', 'avg price');
+        const iQty   = col('qty', 'quantity', 'size', 'contracts', 'lots', 'volume');
+        const iPnl   = col('profit', 'p&l', 'pnl', 'net profit', 'realized');
+        const iComm  = col('commission', 'fee');
+
+        // Parse all raw rows first
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cols = splitCsvLine(lines[i], sep);
+          if (cols.length < 3) continue;
+          const raw = idx => idx >= 0 ? (cols[idx] ?? '').replace(/"/g, '').trim() : '';
+          const first = raw(0).toLowerCase();
+          if (!first || first === 'date/time' || first === 'date' || first === 'total') continue;
+
+          let dateStr = raw(iDate) || raw(0);
+          let rowDate = null;
+          if (dateStr) {
+            const d = new Date(dateStr.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$3-$2-$1').replace(' ', 'T'));
+            if (!isNaN(d)) rowDate = d.toISOString().slice(0, 16);
+          }
+          if (!rowDate) continue;
+
+          const sym = (raw(iSym) || raw(1)).toUpperCase().replace(/[^A-Z0-9/._-]/g, '');
+          if (!sym || sym.length > 20) continue;
+
+          const sideRaw = (raw(iSide) || '').toLowerCase();
+          const side = (sideRaw.includes('sell') || sideRaw.includes('short')) ? 'Sell' : 'Buy';
+
+          const price = parseFloat(raw(iPrice).replace(/[^0-9.]/g, '')) || 0;
+          const qty   = parseFloat(raw(iQty).replace(/[^0-9.]/g, '')) || null;
+          const pnlRaw = raw(iPnl).replace(/[^0-9.\-]/g, '');
+          const pnl  = pnlRaw !== '' ? parseFloat(pnlRaw) : null;
+          const comm = iComm >= 0 ? (parseFloat(raw(iComm).replace(/[^0-9.]/g, '')) || 0) : 0;
+
+          rows.push({ date: rowDate, sym, side, price, qty, pnl, comm });
+        }
+
+        // Strategy: pair entry + exit rows by symbol
+        // Exit rows are the ones that have a PnL value (non-null, non-zero on closed trades)
+        // Entry rows have PnL = null or 0
+        // We match them in chronological order per symbol
+        const trades = [];
+        const openTrades = {}; // sym -> stack of entry rows
+
+        for (const row of rows) {
+          const hasPnl = row.pnl !== null && row.pnl !== 0;
+
+          if (!hasPnl) {
+            // This is an entry row — push to open stack
+            if (!openTrades[row.sym]) openTrades[row.sym] = [];
+            openTrades[row.sym].push(row);
+          } else {
+            // This is an exit/close row — match with earliest open entry for this symbol
+            const entryStack = openTrades[row.sym];
+            const entry = entryStack && entryStack.length > 0 ? entryStack.shift() : null;
+
+            const entryDate  = entry ? entry.date  : row.date;
+            const direction  = entry ? entry.side  : (row.side === 'Buy' ? 'Sell' : 'Buy'); // exit side is opposite
+            const lots       = entry ? entry.qty   : row.qty;
+            const entryPrice = entry ? entry.price : 0;
+            const exitPrice  = row.price;
+
+            // PnL: subtract commissions from both legs
+            const totalComm = (entry ? entry.comm : 0) + row.comm;
+            const pnl = row.pnl - totalComm;
+
+            const result = pnl > 0.001 ? 'Win' : pnl < -0.001 ? 'Loss' : 'BE';
+
+            // RR approximation if we have both prices
+            let rr = null;
+            if (entryPrice && exitPrice && lots) {
+              const move = Math.abs(exitPrice - entryPrice);
+              // We can't know SL, so skip RR calc
+            }
+
+            // Session by entry hour
+            const hour = new Date(entryDate).getUTCHours();
+            let session = 'Off-session';
+            if (hour >= 8 && hour < 12) session = 'London';
+            else if (hour >= 12 && hour < 13) session = 'London/NY Overlap';
+            else if (hour >= 13 && hour < 17) session = 'New York';
+            else if (hour >= 0 && hour < 8) session = 'Asian';
+
+            trades.push({ tradeDate: entryDate, asset: row.sym, direction, pnl: parseFloat(pnl.toFixed(2)), lots, result, session });
+          }
+        }
+
+        // If still nothing (all rows had PnL = 0 or format differs), fall back:
+        // treat every row that has a pnl column value as a complete trade
+        if (!trades.length) {
+          for (const row of rows) {
+            if (row.pnl === null) continue;
+            const pnl = parseFloat((row.pnl - row.comm).toFixed(2));
+            const result = pnl > 0.001 ? 'Win' : pnl < -0.001 ? 'Loss' : 'BE';
+            const hour = new Date(row.date).getUTCHours();
+            let session = 'Off-session';
+            if (hour >= 8 && hour < 12) session = 'London';
+            else if (hour >= 12 && hour < 13) session = 'London/NY Overlap';
+            else if (hour >= 13 && hour < 17) session = 'New York';
+            else if (hour >= 0 && hour < 8) session = 'Asian';
+            trades.push({ tradeDate: row.date, asset: row.sym, direction: row.side, pnl, lots: row.qty, result, session });
+          }
+        }
+
+        return trades;
+      }
+
+      function handleCsvFile(file) {
+        const errEl = document.getElementById('csvError');
+        errEl.style.display = 'none';
+        if (!file || !file.name.toLowerCase().endsWith('.csv')) {
+          errEl.textContent = 'Por favor seleciona um ficheiro .csv';
+          errEl.style.display = 'block';
+          return;
+        }
+        _csvFile = file;
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            _csvRows = parseTradingViewCsv(e.target.result);
+            if (!_csvRows.length) {
+              errEl.textContent = 'Nenhuma trade encontrada. Confirma que exportaste o "Trade Log" (não o "Order History").';
+              errEl.style.display = 'block';
+              return;
+            }
+            showCsvPreview(_csvRows);
+          } catch(err) {
+            errEl.textContent = 'Erro ao ler o ficheiro: ' + err.message;
+            errEl.style.display = 'block';
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function showCsvPreview(rows) {
+        document.getElementById('csvStep1').style.display = 'none';
+        document.getElementById('csvStep2').style.display = '';
+        const wins = rows.filter(r => r.result === 'Win').length;
+        const losses = rows.filter(r => r.result === 'Loss').length;
+        const totalPnl = rows.reduce((s, r) => s + r.pnl, 0);
+        document.getElementById('csvPreviewInfo').innerHTML =
+          `<strong style="color:var(--text)">${rows.length} trades encontradas</strong> &nbsp;·&nbsp; ` +
+          `<span style="color:var(--green)">${wins} wins</span> &nbsp;·&nbsp; ` +
+          `<span style="color:var(--red)">${losses} losses</span> &nbsp;·&nbsp; ` +
+          `PnL total: <span style="color:${totalPnl>=0?'var(--green)':'var(--red)'}">${totalPnl>=0?'+':''}${totalPnl.toFixed(2)}$</span>`;
+        document.getElementById('csvPreviewBody').innerHTML = rows.map(r =>
+          `<tr style="border-top:1px solid var(--border)">
+            <td style="padding:7px 10px;color:var(--text2)">${r.tradeDate.replace('T',' ')}</td>
+            <td style="padding:7px 10px;font-weight:600;color:var(--accent2)">${r.asset}</td>
+            <td style="padding:7px 10px;color:${r.direction==='Buy'?'var(--green)':'var(--red)'}">${r.direction}</td>
+            <td style="padding:7px 10px;text-align:right;color:var(--text2)">${r.lots ?? '—'}</td>
+            <td style="padding:7px 10px;text-align:right;color:${r.pnl>=0?'var(--green)':'var(--red)'}">${r.pnl>=0?'+':''}${r.pnl.toFixed(2)}</td>
+            <td style="padding:7px 10px;text-align:center">${r.result==='Win'?'✅':r.result==='Loss'?'❌':'〰️'}</td>
+          </tr>`
+        ).join('');
+      }
+
+      async function importCsvTrades() {
+        // Prefer server-side import using api/import_trades.php
+        const accountId = document.getElementById('csvAccountSel').value;
+        if (!accountId) return toast('Seleciona uma conta!', 'err');
+        const btn = document.getElementById('csvImportBtn');
+        btn.disabled = true;
+        try {
+          if (!_csvFile) {
+            // fallback: if no file (shouldn't happen) use parsed rows (client-side)
+            if (!_csvRows.length) { btn.disabled = false; return; }
+            let done = 0, errors = 0;
+            for (const row of _csvRows) {
+              try {
+                const payload = { user_id: S.user.id, account_id: accountId, trade_date: row.tradeDate, asset: row.asset, direction: row.direction, lots: row.lots, pnl: row.pnl, result: row.result, session: row.session, notes: 'Importado (cliente)' };
+                const { data } = await api.post('api/trades.php', payload);
+                S.trades.unshift(mapTrade(data));
+                done++;
+              } catch (e) { errors++; }
+            }
+            toast(errors ? `✓ ${done} trades importadas (${errors} erros)` : `✓ ${done} trades importadas com sucesso!`);
+          } else {
+            const fd = new FormData();
+            fd.append('file', _csvFile);
+            fd.append('account_id', accountId);
+            const res = await fetch('api/import_trades.php', { method: 'POST', body: fd, credentials: 'include' });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || 'Import failed');
+            // Reload data from server to reflect inserted trades
+            await loadAll();
+            toast(`Import: parsed ${json.parsed}, inserted ${json.inserted}, skipped_old_date ${json.skipped_old_date}, skipped_duplicate_or_error ${json.skipped_duplicate_or_error}`);
+          }
+        } catch (e) {
+          toast('Erro: ' + (e.message || e), 'err');
+          console.error(e);
+        }
+        btn.disabled = false;
+        document.getElementById('csvStep2').style.display = 'none';
+        document.getElementById('csvStep1').style.display = '';
+        _csvRows = [];
+        _csvFile = null;
+        closeModal('csvImportModal');
+      }
+
+      // CSV drag & drop and file input wiring (runs after DOM ready)
+      (function() {
+        function wireCsv() {
+          const zone = document.getElementById('csvDropZone');
+          const input = document.getElementById('csvFileInput');
+          if (!zone || !input) return;
+          input.onchange = e => { if (e.target.files[0]) handleCsvFile(e.target.files[0]); };
+          zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--accent2)'; });
+          zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
+          zone.addEventListener('drop', e => { e.preventDefault(); zone.style.borderColor = ''; const f = e.dataTransfer.files[0]; if (f) handleCsvFile(f); });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireCsv);
+        else wireCsv();
+      })();
+
     </script>
 
     <!-- CALCULATOR FAB -->
@@ -4969,5 +5246,65 @@
         <button class="calc-btn calc-eq" data-calc="=">=</button>
       </div>
     </div>
-  </body>
+  
+    <!-- CSV IMPORT MODAL -->
+    <div class="modal-overlay" id="csvImportModal">
+      <div class="modal-box" style="max-width:560px">
+        <div class="modal-header">
+          <div class="modal-title">⬆ Importar Trades — TradingView CSV</div>
+          <button class="modal-close" data-action="closeCsvModal">✕</button>
+        </div>
+        <div id="csvStep1">
+          <div style="background:var(--bg3);border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.8;color:var(--text2)">
+            <strong style="color:var(--text);display:block;margin-bottom:6px">Como exportar do TradingView Paper Trading:</strong>
+            1. Abre o Paper Trading no TradingView<br>
+            2. Clica em <strong>"Trade Log"</strong> no painel em baixo<br>
+            3. Clica no ícone de <strong>download ⬇</strong> (canto superior direito do painel)<br>
+            4. Guarda o ficheiro <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">.csv</code><br>
+            5. Carrega aqui em baixo 👇
+          </div>
+          <div style="margin-bottom:14px">
+            <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">Conta de destino</label>
+            <select id="csvAccountSel" style="width:100%"></select>
+          </div>
+          <label id="csvDropZone" style="display:block;border:2px dashed var(--border);border-radius:8px;padding:28px;text-align:center;cursor:pointer;color:var(--text2);font-size:14px;transition:border-color 0.15s">
+            <div style="font-size:32px;margin-bottom:8px">📂</div>
+            Clica para selecionar o ficheiro CSV<br>
+            <span style="font-size:11px;color:var(--text2)">ou arrasta e larga aqui</span>
+            <input type="file" id="csvFileInput" accept=".csv" style="display:none">
+          </label>
+          <div id="csvError" style="color:var(--red);font-size:13px;margin-top:10px;display:none"></div>
+        </div>
+        <div id="csvStep2" style="display:none">
+          <div id="csvPreviewInfo" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
+          <div style="max-height:260px;overflow-y:auto;border-radius:6px;border:1px solid var(--border)">
+            <table style="width:100%;border-collapse:collapse;font-size:12px">
+              <thead>
+                <tr style="background:var(--bg3);position:sticky;top:0">
+                  <th style="padding:8px 10px;text-align:left;color:var(--text2);font-weight:600">Data</th>
+                  <th style="padding:8px 10px;text-align:left;color:var(--text2);font-weight:600">Ativo</th>
+                  <th style="padding:8px 10px;text-align:left;color:var(--text2);font-weight:600">Dir.</th>
+                  <th style="padding:8px 10px;text-align:right;color:var(--text2);font-weight:600">Lotes</th>
+                  <th style="padding:8px 10px;text-align:right;color:var(--text2);font-weight:600">PnL</th>
+                  <th style="padding:8px 10px;text-align:center;color:var(--text2);font-weight:600">Resultado</th>
+                </tr>
+              </thead>
+              <tbody id="csvPreviewBody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="btn btn-primary" id="csvImportBtn" data-action="importCsvTrades">✓ Importar todas</button>
+            <button class="btn btn-secondary" data-action="csvBack">← Voltar</button>
+          </div>
+          <div id="csvProgress" style="display:none;margin-top:12px">
+            <div style="background:var(--bg3);border-radius:4px;height:6px;overflow:hidden">
+              <div id="csvProgressBar" style="height:100%;background:var(--accent2);width:0%;transition:width 0.2s"></div>
+            </div>
+            <div id="csvProgressText" style="font-size:12px;color:var(--text2);margin-top:6px;text-align:center"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+</body>
 </html>
