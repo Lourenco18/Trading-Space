@@ -1,0 +1,65 @@
+# ════════════════════════════════════════════════════════════════
+# Trading Space — .gitignore
+# ════════════════════════════════════════════════════════════════
+
+# ── Credenciais e configuração sensível ─────────────────────────
+# NUNCA comitar o config.php real — contém password da base de dados.
+# Usa config.example.php como modelo e mantém o real só no servidor.
+api/config.php
+config.php
+.env
+.env.*
+
+# ── Ferramentas de diagnóstico/debug ────────────────────────────
+# Mostram informação sensível sobre a BD — nunca devem ir para o repo.
+api/debug_check.php
+debug_check.php
+**/debug_check.php
+
+# ── Dumps e backups de base de dados ────────────────────────────
+# Podem conter dados reais de utilizadores (emails, trades, etc.)
+*.sql.bak
+*.sql.gz
+*backup*.sql
+/dumps/
+/backups/
+
+# ── Logs ─────────────────────────────────────────────────────────
+*.log
+error_log
+php_errors.log
+
+# ── Sessões PHP (se gravadas em ficheiro) ───────────────────────
+sessions/
+tmp/
+
+# ── Ficheiros de sistema operativo ───────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Desktop.ini
+
+# ── Editores / IDEs ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# ── Dependências (caso venhas a usar Composer/NPM no futuro) ────
+/vendor/
+/node_modules/
+composer.lock
+
+# ── Ficheiros temporários/compactados que possas gerar ao testar ─
+*.zip
+*.tmp
+
+# ── Uploads de utilizadores (se vierem a ser guardados em disco) ─
+/uploads/
+/api/uploads/

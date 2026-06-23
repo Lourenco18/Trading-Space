@@ -5,6 +5,7 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'trading_space');
 
+
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
 
