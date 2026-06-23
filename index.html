@@ -1974,10 +1974,17 @@
               <div class="logo-name">Trading Space</div>
               <div class="logo-sub">prop firm journal</div>
             </div>
+            <button
+              id="alertBell"
+              data-action="openAlertsModal"
+              style="margin-left:auto;background:none;border:none;cursor:pointer;position:relative;padding:4px;font-size:16px;line-height:1;color:var(--text2)"
+              title="Alertas"
+            >
+              🔔<span id="alertBadge" style="position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:10px;min-width:15px;height:15px;align-items:center;justify-content:center;padding:0 3px;display:none">0</span>
+            </button>
             <div
               class="sync-dot"
               id="syncDot"
-              style="margin-left: auto"
               title="Sincronizado"
             ></div>
           </div>
@@ -2101,6 +2108,7 @@
               <div style="display:flex;gap:8px;align-items:center">
                 <button class="btn btn-primary" data-action="openTradeModal">+ New Trade</button>
                 <button class="btn btn-secondary" data-action="openCsvModal" style="display:flex;align-items:center;gap:6px">⬆ Importar CSV</button>
+                <button class="btn btn-secondary" data-action="exportTodayTrades" style="display:flex;align-items:center;gap:6px">⬇ Exportar Hoje</button>
               </div>
             </div>
             <div class="filter-row">
@@ -2314,47 +2322,36 @@
             </div>
             <div class="card">
               <div class="card-title">Adicionar Conta</div>
+
+              <div class="form-field" style="margin-bottom:14px">
+                <label>Preset de Regras (opcional)</label>
+                <select id="aPreset" onchange="applyAccountPreset(this.value)">
+                  <option value="">— Personalizado —</option>
+                  <option value="fp_2step_std">FundingPips · 2-Step Standard (8% / 5% · DD 5%/10%)</option>
+                  <option value="fp_2step_pro">FundingPips · 2-Step Pro (6% / 6% · DD 3%/6%)</option>
+                  <option value="fp_1step">FundingPips · 1-Step (10% · DD 3%/6%)</option>
+                </select>
+                <div style="font-size:11px;color:var(--text2);margin-top:4px">
+                  ⚠️ Valores de referência (verifica sempre as regras oficiais atualizadas da prop firm — podem mudar)
+                </div>
+              </div>
+
               <div class="form-grid">
                 <div class="form-field">
                   <label>Nome *</label
-                  ><input type="text" id="aN" placeholder="ex: FTMO 100K #1" />
+                  ><input type="text" id="aN" placeholder="ex: FundingPips 5K #1" />
                 </div>
                 <div class="form-field">
                   <label>Prop Firm</label
-                  ><input
-                    type="text"
-                    id="aF"
-                    placeholder="ex: FTMO, MyFundedFX..."
-                  />
+                  ><input type="text" id="aF" placeholder="ex: FundingPips, FTMO..." />
                 </div>
                 <div class="form-field">
                   <label>Capital ($)</label
-                  ><input type="number" id="aC" placeholder="100000" />
+                  ><input type="number" id="aC" placeholder="5000" />
                 </div>
                 <div class="form-field">
                   <label>Profit Split (%)</label
                   ><input type="number" id="aS" placeholder="80" />
-                </div>
-                <div class="form-field">
-                  <label>Profit Target (%)</label
-                  ><input type="number" id="aPT" placeholder="10" />
-                </div>
-                <div class="form-field">
-                  <label>Max Drawdown (%)</label
-                  ><input type="number" id="aDD" placeholder="10" />
-                </div>
-                <div class="form-field">
-                  <label>Daily Drawdown (%)</label
-                  ><input type="number" id="aDDD" placeholder="5" />
-                </div>
-                <div class="form-field">
-                  <label>Status</label
-                  ><select id="aSt">
-                    <option>Funded</option>
-                    <option>Challenge</option>
-                    <option>Verificação</option>
-                    <option>Encerrada</option>
-                  </select>
                 </div>
                 <div class="form-field">
                   <label>Mercado</label
@@ -2364,6 +2361,51 @@
                     <option>Crypto</option>
                     <option>Commodities</option>
                     <option>Misto</option>
+                  </select>
+                </div>
+
+                <div class="form-field" style="grid-column:1/-1;margin-top:6px">
+                  <label class="field-label">Regras de Risco</label>
+                </div>
+                <div class="form-field">
+                  <label>Profit Target Fase 1 (%)</label
+                  ><input type="number" id="aPT1" placeholder="8" step="0.1" />
+                </div>
+                <div class="form-field">
+                  <label>Profit Target Fase 2 (%)</label
+                  ><input type="number" id="aPT2" placeholder="5 (0 = sem fase 2)" step="0.1" />
+                </div>
+                <div class="form-field">
+                  <label>Max Drawdown (%)</label
+                  ><input type="number" id="aDD" placeholder="10" step="0.1" />
+                </div>
+                <div class="form-field">
+                  <label>Daily Drawdown (%)</label
+                  ><input type="number" id="aDDD" placeholder="5" step="0.1" />
+                </div>
+                <div class="form-field">
+                  <label>Dias mínimos de trading (por fase)</label
+                  ><input type="number" id="aMinDays" placeholder="3" />
+                </div>
+                <div class="form-field">
+                  <label>Risco máx. por trade (%) — opcional</label
+                  ><input type="number" id="aMaxRisk" placeholder="ex: 2" step="0.1" />
+                </div>
+                <div class="form-field">
+                  <label>Fase Inicial</label
+                  ><select id="aPhase">
+                    <option value="Phase 1">Fase 1 (Challenge)</option>
+                    <option value="Phase 2">Fase 2 (Verificação)</option>
+                    <option value="Funded">Funded (já financiada)</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>Frequência de Payout (quando Funded)</label
+                  ><select id="aPayoutFreq">
+                    <option value="0">On-Demand (sem limite)</option>
+                    <option value="7">Semanal (7 dias)</option>
+                    <option value="14">Quinzenal (14 dias)</option>
+                    <option value="30">Mensal (30 dias)</option>
                   </select>
                 </div>
               </div>
@@ -3197,7 +3239,7 @@
               <optgroup label="CVD">
                 <option>US100</option>
                 <option>US30</option>
-                <option>XAU</option>
+                <option>XAUUSD</option>
               </optgroup>
               <option value="__custom">Outro (personalizado)...</option>
             </select>
@@ -3339,6 +3381,7 @@
         strategies: [],
         trades: [],
         notes: [],
+        payouts: [],
         activeAccountId: "",
       };
 
@@ -3380,6 +3423,24 @@
         dailyDD: +r.daily_dd || 5,
         status: r.status || "Challenge",
         market: r.market || "Forex",
+        phase: r.phase || "Phase 1",
+        phase1Target: r.phase1_target !== null && r.phase1_target !== undefined ? +r.phase1_target : 8,
+        phase2Target: r.phase2_target !== null && r.phase2_target !== undefined ? +r.phase2_target : 5,
+        minTradingDays: r.min_trading_days !== null && r.min_trading_days !== undefined ? +r.min_trading_days : 3,
+        maxRiskPct: r.max_risk_pct !== null && r.max_risk_pct !== undefined && r.max_risk_pct !== "" ? +r.max_risk_pct : null,
+        phaseStartDate: r.phase_start_date || null,
+        lastPayoutDate: r.last_payout_date || null,
+        payoutFreqDays: r.payout_freq_days !== null && r.payout_freq_days !== undefined ? +r.payout_freq_days : 0,
+      });
+      const mapPayout = (r) => ({
+        id: r.id,
+        accountId: r.account_id,
+        grossProfit: +r.gross_profit || 0,
+        splitPct: +r.split_pct || 80,
+        amount: +r.amount || 0,
+        isTest: !!(+r.is_test),
+        note: r.note || "",
+        date: r.payout_date,
       });
       const mapStrat = (r) => ({
         id: r.id,
@@ -3472,6 +3533,8 @@
           S.user?.email || S.user?.user_metadata?.full_name || "—";
         renderDash();
         refreshSelects();
+        updateAlertBadge();
+        setTimeout(toastNewAlerts, 600);
       }
 
       // ── LOAD ALL ──────────────────────────────────────────────────
@@ -3484,6 +3547,7 @@
           S.strategies = (data.strategies || []).map(r => mapStrat({...r, pairs: parseJ(r.pairs), sessions: parseJ(r.sessions)}));
           S.trades     = (data.trades     || []).map(r => mapTrade({...r, images: parseJ(r.images)}));
           S.notes      = (data.notes      || []).map(mapNote);
+          S.payouts    = (data.payouts    || []).map(mapPayout);
           setSyncing(false);
         } catch (e) {
           console.error("loadAll error:", e);
@@ -3648,38 +3712,65 @@
       }
 
       // ── ACCOUNTS ─────────────────────────────────────────────────
+
+      // Presets de regras (valores de referência — confirma sempre na firma)
+      const ACCOUNT_PRESETS = {
+        fp_2step_std: { firm: "FundingPips", phase1Target: 8, phase2Target: 5, maxDD: 10, dailyDD: 5, minDays: 3, split: 80, payoutFreq: 0 },
+        fp_2step_pro: { firm: "FundingPips", phase1Target: 6, phase2Target: 6, maxDD: 6,  dailyDD: 3, minDays: 3, split: 80, payoutFreq: 0 },
+        fp_1step:     { firm: "FundingPips", phase1Target: 10, phase2Target: 0, maxDD: 6, dailyDD: 3, minDays: 3, split: 80, payoutFreq: 0 },
+      };
+      function applyAccountPreset(key) {
+        const p = ACCOUNT_PRESETS[key];
+        if (!p) return;
+        document.getElementById("aF").value = p.firm;
+        document.getElementById("aPT1").value = p.phase1Target;
+        document.getElementById("aPT2").value = p.phase2Target;
+        document.getElementById("aDD").value = p.maxDD;
+        document.getElementById("aDDD").value = p.dailyDD;
+        document.getElementById("aMinDays").value = p.minDays;
+        document.getElementById("aS").value = p.split;
+        document.getElementById("aPayoutFreq").value = String(p.payoutFreq);
+      }
+
       async function saveAccount() {
         if (!requireUser()) return;
         const name = document.getElementById("aN").value.trim();
-        if (!name)
-          return toast(
-            "Name".replace(" *", "") +
-              ": " +
-              "Asset is required!".split(" ")[0],
-            "err",
-          );
+        if (!name) return toast("O nome da conta é obrigatório!", "err");
+        const phase = document.getElementById("aPhase").value;
+        const statusMap = { "Phase 1": "Challenge", "Phase 2": "Verificação", "Funded": "Funded" };
         const row = {
           user_id: S.user.id,
           name,
           firm: document.getElementById("aF").value.trim(),
           capital: parseFloat(document.getElementById("aC").value) || 0,
           split: parseFloat(document.getElementById("aS").value) || 80,
-          profit_target: parseFloat(document.getElementById("aPT").value) || 10,
+          profit_target: parseFloat(document.getElementById("aPT1").value) || 8,
           max_dd: parseFloat(document.getElementById("aDD").value) || 10,
           daily_dd: parseFloat(document.getElementById("aDDD").value) || 5,
-          status: document.getElementById("aSt").value,
+          status: statusMap[phase] || "Challenge",
           market: document.getElementById("aMkt").value,
+          phase: phase,
+          phase1_target: parseFloat(document.getElementById("aPT1").value) || 8,
+          phase2_target: parseFloat(document.getElementById("aPT2").value) || 0,
+          min_trading_days: parseInt(document.getElementById("aMinDays").value) || 3,
+          max_risk_pct: document.getElementById("aMaxRisk").value ? parseFloat(document.getElementById("aMaxRisk").value) : null,
+          phase_start_date: new Date().toISOString().slice(0, 10),
+          payout_freq_days: parseInt(document.getElementById("aPayoutFreq").value) || 0,
         };
         setSyncing(true);
         try {
           const { data } = await api.post("api/accounts.php", row);
           S.accounts.push(mapAcc(data));
-          ["aN", "aF", "aC", "aS", "aPT", "aDD", "aDDD"].forEach(
+          ["aN", "aF", "aC", "aS", "aPT1", "aPT2", "aDD", "aDDD", "aMinDays", "aMaxRisk"].forEach(
             (id) => (document.getElementById(id).value = ""),
           );
+          document.getElementById("aPreset").value = "";
+          document.getElementById("aPhase").value = "Phase 1";
+          document.getElementById("aPayoutFreq").value = "0";
           refreshSelects();
           renderAccounts();
-          toast("Account added! ✓");
+          updateAlertBadge();
+          toast("Conta adicionada! ✓");
         } catch (e) { toast("Error: " + e.message, "err"); }
         setSyncing(false);
       }
@@ -3697,10 +3788,182 @@
           }
           refreshSelects();
           renderAccounts();
+          updateAlertBadge();
           toast("Account deleted");
         } catch (e) { toast("Error: " + e.message, "err"); }
         setSyncing(false);
       }
+      // ── COMPLIANCE TRACKER ───────────────────────────────────────────────────────
+      function calcCompliance(a) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const startDate = a.phaseStartDate || "0000-00-00";
+
+        const phaseTrades = S.trades
+          .filter((t) => t.accountId === a.id && t.date && t.date.slice(0, 10) >= startDate)
+          .slice()
+          .sort((x, y) => new Date(x.date) - new Date(y.date));
+
+        const netPnL = phaseTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+
+        // Running balance to find worst point reached (for static Max DD check)
+        let runningBal = a.capital, minBal = a.capital;
+        for (const t of phaseTrades) {
+          runningBal += t.pnl || 0;
+          if (runningBal < minBal) minBal = runningBal;
+        }
+        const maxDDFloor = a.capital * (1 - a.maxDD / 100);
+        const maxDDBreached = minBal < maxDDFloor - 0.0001;
+        const maxDDUsedPct = Math.min(100, Math.max(0, ((a.capital - minBal) / (a.capital * a.maxDD / 100)) * 100 || 0));
+
+        // Daily drawdown — check every day for historical breach + today's live usage
+        const byDay = {};
+        phaseTrades.forEach((t) => {
+          const d = t.date.slice(0, 10);
+          (byDay[d] = byDay[d] || []).push(t);
+        });
+        let dailyBreachDate = null;
+        let runningBeforeDay = a.capital;
+        const days = Object.keys(byDay).sort();
+        for (const d of days) {
+          const dayPnL = byDay[d].reduce((s, t) => s + (t.pnl || 0), 0);
+          const dailyLimitAmt = runningBeforeDay * (a.dailyDD / 100);
+          if (dayPnL < 0 && Math.abs(dayPnL) > dailyLimitAmt + 0.0001) {
+            dailyBreachDate = d;
+          }
+          runningBeforeDay += dayPnL;
+        }
+        const todayTrades = byDay[todayStr] || [];
+        const todayPnL = todayTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+        const balanceBeforeToday = a.capital + phaseTrades
+          .filter((t) => t.date.slice(0, 10) < todayStr)
+          .reduce((s, t) => s + (t.pnl || 0), 0);
+        const dailyLimitAmtToday = balanceBeforeToday * (a.dailyDD / 100);
+        const dailyUsedPctToday = todayPnL < 0
+          ? Math.min(100, (Math.abs(todayPnL) / (dailyLimitAmtToday || 1)) * 100)
+          : 0;
+
+        // Profit target (only relevant pre-Funded)
+        const target = a.phase === "Phase 2" ? a.phase2Target : a.phase1Target;
+        const targetAmount = a.capital * (target / 100);
+        const targetMet = target > 0 && netPnL >= targetAmount;
+        const profitProgressPct = target > 0 ? Math.min(100, Math.max(0, (netPnL / targetAmount) * 100)) : 0;
+
+        // Trading days
+        const tradingDays = days.length;
+        const minDaysMet = tradingDays >= a.minTradingDays;
+
+        // Risk-per-trade violations
+        const riskViolations = a.maxRiskPct
+          ? phaseTrades.filter((t) => t.riskPct && parseFloat(t.riskPct) > a.maxRiskPct).length
+          : 0;
+
+        const breached = maxDDBreached || !!dailyBreachDate;
+        const isLastPhase = a.phase === "Phase 1" ? (a.phase2Target <= 0) : true;
+        const canAdvance = !breached && a.phase !== "Funded" && targetMet && minDaysMet;
+
+        // Payout-eligible profit (Funded only) — profit since last payout (or since became funded)
+        const payoutSinceDate = a.lastPayoutDate || a.phaseStartDate || "0000-00-00";
+        const eligibleProfit = S.trades
+          .filter((t) => t.accountId === a.id && t.date && t.date.slice(0, 10) >= payoutSinceDate)
+          .reduce((s, t) => s + (t.pnl || 0), 0);
+
+        // Frequência de payout — calcula próxima data disponível
+        let nextPayoutDate = null, daysUntilPayout = 0, canRequestPayout = true;
+        if (a.payoutFreqDays > 0) {
+          const anchor = new Date(payoutSinceDate + "T00:00:00");
+          const next = new Date(anchor.getTime() + a.payoutFreqDays * 86400000);
+          nextPayoutDate = next.toISOString().slice(0, 10);
+          const todayD = new Date(todayStr + "T00:00:00");
+          daysUntilPayout = Math.max(0, Math.ceil((next - todayD) / 86400000));
+          canRequestPayout = todayD >= next;
+        }
+
+        return {
+          netPnL, currentBalance: a.capital + netPnL, minBal, maxDDFloor, maxDDBreached, maxDDUsedPct,
+          dailyBreachDate, todayPnL, dailyUsedPctToday, target, targetAmount, targetMet, profitProgressPct,
+          tradingDays, minDaysMet, riskViolations, breached, isLastPhase, canAdvance, eligibleProfit,
+          nextPayoutDate, daysUntilPayout, canRequestPayout,
+        };
+      }
+
+      function gaugeColor(pct, inverse) {
+        // inverse=true means higher pct is worse (drawdown gauges)
+        if (inverse) return pct >= 90 ? "var(--red)" : pct >= 60 ? "var(--yellow)" : "var(--green)";
+        return pct >= 100 ? "var(--green)" : pct >= 50 ? "var(--accent2)" : "var(--yellow)";
+      }
+
+      async function advancePhase(id) {
+        if (!requireUser()) return;
+        const a = S.accounts.find((x) => x.id === id);
+        if (!a) return;
+        const c = calcCompliance(a);
+        if (!c.canAdvance) return toast("Ainda não cumpres os requisitos para avançar.", "err");
+
+        const goingTo = a.phase === "Phase 1" ? (a.phase2Target > 0 ? "Phase 2" : "Funded") : "Funded";
+        const label = goingTo === "Funded" ? "Funded (conta financiada)" : "Fase 2 (Verificação)";
+        if (!confirm(`Avançar "${a.name}" para ${label}?\\n\\nIsto reinicia o contador de dias e o ponto de partida do drawdown a partir de hoje.`)) return;
+
+        const statusMap = { "Phase 1": "Challenge", "Phase 2": "Verificação", "Funded": "Funded" };
+        const payload = {
+          phase: goingTo,
+          status: statusMap[goingTo],
+          phase_start_date: new Date().toISOString().slice(0, 10),
+        };
+        setSyncing(true);
+        try {
+          const { data } = await api.put("api/accounts.php?id=" + id, payload);
+          S.accounts = S.accounts.map((x) => (x.id === id ? mapAcc(data) : x));
+          renderAccounts();
+          updateAlertBadge();
+          toast(goingTo === "Funded" ? "🎉 Conta promovida a Funded!" : "✓ Avançaste para a Fase 2!");
+        } catch (e) { toast("Error: " + e.message, "err"); }
+        setSyncing(false);
+      }
+
+      async function requestPayout(id) {
+        if (!requireUser()) return;
+        const a = S.accounts.find((x) => x.id === id);
+        if (!a) return;
+        const c = calcCompliance(a);
+        if (c.eligibleProfit <= 0) return toast("Sem lucro elegível para payout.", "err");
+        if (!c.canRequestPayout) return toast(`⏳ Ainda faltam ${c.daysUntilPayout} dia(s). Próximo payout disponível em ${fmtD(c.nextPayoutDate)}.`, "err");
+
+        const amount = parseFloat((c.eligibleProfit * (a.split / 100)).toFixed(2));
+        if (!confirm(`Solicitar payout de TESTE?\\n\\nLucro elegível: ${fmt(c.eligibleProfit)}\\nSplit: ${a.split}%\\nValor do payout: ${fmt(amount)}\\n\\n(Isto é apenas uma simulação — não é dinheiro real)`)) return;
+
+        setSyncing(true);
+        try {
+          const { data } = await api.post("api/payouts.php", {
+            account_id: id,
+            gross_profit: c.eligibleProfit,
+            split_pct: a.split,
+            amount,
+            is_test: 1,
+            note: "Payout de teste",
+          });
+          S.payouts.unshift(mapPayout(data));
+          S.accounts = S.accounts.map((x) =>
+            x.id === id ? { ...x, lastPayoutDate: new Date().toISOString().slice(0, 10) } : x
+          );
+          renderAccounts();
+          updateAlertBadge();
+          toast(`✓ Payout de teste registado: ${fmt(amount)}`);
+        } catch (e) { toast("Error: " + e.message, "err"); }
+        setSyncing(false);
+      }
+
+      async function deletePayout(id) {
+        if (!requireUser()) return;
+        if (!confirm("Apagar este registo de payout?")) return;
+        setSyncing(true);
+        try {
+          await api.del("api/payouts.php?id=" + id);
+          S.payouts = S.payouts.filter((p) => p.id !== id);
+          renderAccounts();
+        } catch (e) { toast("Error: " + e.message, "err"); }
+        setSyncing(false);
+      }
+
       function renderAccounts() {
         const el = document.getElementById("accList");
         if (!el) return;
@@ -3712,29 +3975,237 @@
         el.innerHTML = S.accounts
           .map((a) => {
             const at = S.trades.filter((t) => t.accountId === a.id);
-            const pnl = at.reduce((s, t) => s + (t.pnl || 0), 0),
-              wins = at.filter((t) => t.result === "Win").length;
-            const wr = at.length ? Math.round((wins / at.length) * 100) : 0,
-              pPct = a.capital ? (pnl / a.capital) * 100 : 0;
-            const prog = Math.min(
-                100,
-                Math.max(0, (pPct / a.profitTarget) * 100),
-              ),
-              sc =
-                a.status === "Funded"
-                  ? "funded"
-                  : a.status === "Challenge"
-                    ? "challenge"
-                    : "other",
-              fc = prog >= 100 ? "done" : prog > 50 ? "ok" : "warn";
-            return `<div class="acc-card"><div style="flex:1">
-      <div class="acc-name">${a.name}<span class="acc-status ${sc}">${a.status}</span></div>
-      <div class="acc-meta">${a.firm || "—"} · $${a.capital.toLocaleString()} · ${a.split}% split · ${a.market}<br>Max DD: ${a.maxDD}% · Daily DD: ${a.dailyDD}% · Target: ${a.profitTarget}%<br>PnL: <span style="color:${pnl >= 0 ? "var(--green)" : "var(--red)"}">${fmt(pnl)} (${pPct.toFixed(2)}%)</span> · ${at.length} trades · WR: ${wr}%</div>
-      <div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;margin-bottom:4px"><span>Progresso</span><span>${pPct.toFixed(2)}% / ${a.profitTarget}%</span></div><div class="progress-bar"><div class="progress-fill ${fc}" style="width:${prog}%"></div></div></div>
-    </div><button class="btn btn-danger btn-sm" data-action="deleteAccount" data-id="${a.id}">🗑 Eliminar</button></div>`;
+            const wins = at.filter((t) => t.result === "Win").length;
+            const wr = at.length ? Math.round((wins / at.length) * 100) : 0;
+            const c = calcCompliance(a);
+
+            const phaseBadge = {
+              "Phase 1": `<span class="acc-status challenge">Fase 1</span>`,
+              "Phase 2": `<span class="acc-status challenge">Fase 2</span>`,
+              "Funded": `<span class="acc-status funded">Funded</span>`,
+            }[a.phase] || "";
+
+            const statusBanner = c.breached
+              ? `<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:var(--red)">
+                   ❌ <strong>Regra violada</strong> — ${c.maxDDBreached ? "Max Drawdown excedido" : `Daily Drawdown excedido em ${fmtD(c.dailyBreachDate)}`}
+                 </div>`
+              : c.canAdvance
+              ? `<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:var(--green);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                   <span>✅ <strong>Objetivos cumpridos!</strong> Podes avançar de fase.</span>
+                   <button class="btn btn-primary btn-sm" data-action="advancePhase" data-id="${a.id}">Avançar de Fase →</button>
+                 </div>`
+              : "";
+
+            const riskWarning = c.riskViolations > 0
+              ? `<div style="font-size:11px;color:var(--yellow);margin-top:6px">⚠️ ${c.riskViolations} trade(s) excederam o risco máx. de ${a.maxRiskPct}%</div>`
+              : "";
+
+            const complianceBlock = a.phase !== "Funded" ? `
+              <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px"><span>Daily DD (hoje)</span><span>${c.dailyUsedPctToday.toFixed(0)}%</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:${c.dailyUsedPctToday}%;background:${gaugeColor(c.dailyUsedPctToday, true)}"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px"><span>Max DD (pior ponto)</span><span>${c.maxDDUsedPct.toFixed(0)}%</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:${c.maxDDUsedPct}%;background:${gaugeColor(c.maxDDUsedPct, true)}"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px"><span>Profit Target (${c.target}%)</span><span>${c.profitProgressPct.toFixed(0)}%</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:${c.profitProgressPct}%;background:${gaugeColor(c.profitProgressPct, false)}"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px"><span>Dias de Trading</span><span>${c.tradingDays}/${a.minTradingDays}</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,(c.tradingDays/a.minTradingDays)*100)}%;background:${c.minDaysMet?"var(--green)":"var(--accent2)"}"></div></div>
+                </div>
+              </div>
+              ${riskWarning}
+            ` : `
+              <div style="margin-top:12px;background:var(--bg3);border-radius:8px;padding:14px">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+                  <div>
+                    <div style="font-size:11px;color:var(--text2);margin-bottom:3px">Lucro elegível para payout</div>
+                    <div style="font-size:18px;font-weight:700;color:${c.eligibleProfit>=0?"var(--green)":"var(--red)"}">${fmt(c.eligibleProfit)}</div>
+                    <div style="font-size:11px;color:var(--text2);margin-top:2px">Split ${a.split}% → payout estimado: <strong style="color:var(--accent2)">${fmt(Math.max(0,c.eligibleProfit*a.split/100))}</strong></div>
+                    ${a.payoutFreqDays > 0 ? `<div style="font-size:11px;margin-top:4px;color:${c.canRequestPayout?"var(--green)":"var(--yellow)"}">${c.canRequestPayout ? "✅ Payout disponível agora" : `⏳ Próximo payout em ${c.daysUntilPayout} dia(s) — ${fmtD(c.nextPayoutDate)}`}</div>` : `<div style="font-size:11px;margin-top:4px;color:var(--text2)">On-Demand — sem limite de frequência</div>`}
+                  </div>
+                  <button class="btn btn-primary btn-sm" data-action="requestPayout" data-id="${a.id}" ${(c.eligibleProfit<=0||!c.canRequestPayout)?"disabled style='opacity:.5;cursor:not-allowed'":""}>💸 Payout (Teste)</button>
+                </div>
+                <div style="margin-top:10px">
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px"><span>Max DD (pior ponto desde Funded)</span><span>${c.maxDDUsedPct.toFixed(0)}%</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:${c.maxDDUsedPct}%;background:${gaugeColor(c.maxDDUsedPct, true)}"></div></div>
+                </div>
+                ${riskWarning}
+              </div>
+              ${renderPayoutHistory(a.id)}
+            `;
+
+            return `<div class="acc-card" style="flex-direction:column;align-items:stretch">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+                <div style="flex:1">
+                  <div class="acc-name">${a.name} ${phaseBadge}</div>
+                  <div class="acc-meta">${a.firm || "—"} · $${a.capital.toLocaleString()} · ${a.split}% split · ${a.market}<br>Max DD: ${a.maxDD}% · Daily DD: ${a.dailyDD}%${a.maxRiskPct?` · Risco máx/trade: ${a.maxRiskPct}%`:""}<br>Saldo atual: <span style="color:${c.netPnL>=0?"var(--green)":"var(--red)"}">${fmt(c.currentBalance)}</span> (${fmt(c.netPnL)}) · ${at.length} trades · WR: ${wr}%</div>
+                </div>
+                <button class="btn btn-danger btn-sm" data-action="deleteAccount" data-id="${a.id}">🗑</button>
+              </div>
+              ${complianceBlock}
+              ${statusBanner}
+            </div>`;
           })
           .join("");
       }
+
+      function renderPayoutHistory(accountId) {
+        const list = S.payouts.filter((p) => p.accountId === accountId);
+        if (!list.length) return "";
+        const rows = list
+          .map(
+            (p) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">
+              <span style="color:var(--text2)">${fmtD(p.date)} ${p.isTest ? '<span style="color:var(--yellow)">(teste)</span>' : ""}</span>
+              <span style="color:var(--green);font-weight:600">${fmt(p.amount)}</span>
+              <button class="btn btn-danger btn-xs" data-action="deletePayout" data-id="${p.id}">✕</button>
+            </div>`
+          )
+          .join("");
+        return `<div style="margin-top:10px">
+          <div class="field-label" style="margin-bottom:4px">Histórico de Payouts</div>
+          ${rows}
+        </div>`;
+      }
+
+      // ── ALERTAS — violações de regras + ganhos ────────────────────────────────────
+      const _seenAlertKeys = new Set(); // evita repetir o mesmo toast nesta sessão
+
+      function getAllAlerts() {
+        const breaches = [];
+        const achievements = [];
+
+        S.accounts.forEach((a) => {
+          if (a.status === "Encerrada") return; // já tratada, ignora
+          const c = calcCompliance(a);
+
+          if (c.breached) {
+            breaches.push({
+              key: `breach:${a.id}`,
+              accountId: a.id,
+              text: `"${a.name}" violou ${c.maxDDBreached ? "o Max Drawdown" : `o Daily Drawdown (${fmtD(c.dailyBreachDate)})`}`,
+            });
+          }
+
+          if (a.phase !== "Funded" && c.canAdvance) {
+            achievements.push({
+              key: `advance:${a.id}`,
+              accountId: a.id,
+              text: `"${a.name}" cumpriu os objetivos — pronta para avançar de fase! 🚀`,
+            });
+          }
+
+          if (a.phase === "Funded" && c.eligibleProfit > 0 && c.canRequestPayout) {
+            achievements.push({
+              key: `payout:${a.id}`,
+              accountId: a.id,
+              text: `"${a.name}" tem ${fmt(c.eligibleProfit)} de lucro elegível para payout 💸`,
+            });
+          }
+        });
+
+        // Ganhos de hoje, no geral
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayPnL = S.trades
+          .filter((t) => t.date && t.date.slice(0, 10) === todayStr)
+          .reduce((s, t) => s + (t.pnl || 0), 0);
+        if (todayPnL > 0) {
+          achievements.push({
+            key: `gain:${todayStr}:${Math.round(todayPnL)}`,
+            accountId: null,
+            text: `Lucro total de hoje: +${fmt(todayPnL).replace("+", "")} 🎉`,
+          });
+        }
+
+        return { breaches, achievements };
+      }
+
+      function updateAlertBadge() {
+        const { breaches, achievements } = getAllAlerts();
+        const total = breaches.length + achievements.length;
+        const badge = document.getElementById("alertBadge");
+        if (!badge) return;
+        if (total > 0) {
+          badge.textContent = total > 9 ? "9+" : String(total);
+          badge.style.display = "flex";
+          badge.style.background = breaches.length ? "var(--red)" : "var(--green)";
+        } else {
+          badge.style.display = "none";
+        }
+      }
+
+      function toastNewAlerts() {
+        const { breaches, achievements } = getAllAlerts();
+        breaches.forEach((b) => {
+          if (!_seenAlertKeys.has(b.key)) {
+            _seenAlertKeys.add(b.key);
+            toast(`❌ ${b.text}`, "err");
+          }
+        });
+        achievements.forEach((a) => {
+          if (!_seenAlertKeys.has(a.key)) {
+            _seenAlertKeys.add(a.key);
+            toast(`✅ ${a.text}`, "ok");
+          }
+        });
+        updateAlertBadge();
+      }
+
+      function openAlertsModal() {
+        const { breaches, achievements } = getAllAlerts();
+        const body = document.getElementById("alertsBody");
+        let html = "";
+
+        if (breaches.length) {
+          html += `<div class="field-label" style="margin-bottom:8px;color:var(--red)">⚠️ Regras Violadas</div>`;
+          breaches.forEach((b) => {
+            html += `<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <span>${b.text}</span>
+              <button class="btn btn-danger btn-xs" data-action="markAccountLost" data-id="${b.accountId}">Marcar como Perdida</button>
+            </div>`;
+          });
+        }
+
+        if (achievements.length) {
+          html += `<div class="field-label" style="margin:14px 0 8px;color:var(--green)">🎉 Conquistas &amp; Ganhos</div>`;
+          achievements.forEach((a) => {
+            html += `<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px">${a.text}</div>`;
+          });
+        }
+
+        if (!breaches.length && !achievements.length) {
+          html = '<div class="empty"><div class="empty-icon">🔔</div><p>Sem alertas por agora. Tudo em ordem!</p></div>';
+        }
+
+        body.innerHTML = html;
+        openModal("alertsModal");
+      }
+      function closeAlertsModal() {
+        closeModal("alertsModal");
+      }
+
+      async function markAccountLost(id) {
+        if (!requireUser()) return;
+        const a = S.accounts.find((x) => x.id === id);
+        if (!a) return;
+        if (!confirm(`Marcar "${a.name}" como Perdida (Encerrada)?\\n\\nIsto regista que a conta foi violada e perdida — fica guardada no histórico mas deixa de gerar alertas.`)) return;
+        setSyncing(true);
+        try {
+          const { data } = await api.put("api/accounts.php?id=" + id, { status: "Encerrada" });
+          S.accounts = S.accounts.map((x) => (x.id === id ? mapAcc(data) : x));
+          updateAlertBadge();
+          openAlertsModal();
+          renderAccounts();
+          toast("Conta marcada como Perdida.", "err");
+        } catch (e) { toast("Error: " + e.message, "err"); }
+        setSyncing(false);
+      }
+
       function refreshSelects() {
         const aOpts = S.accounts
           .map((a) => `<option value="${a.id}">${a.name}</option>`)
@@ -4107,6 +4578,7 @@
           renderTrades();
           renderDash();
           toast("Trade saved! ✓");
+          setTimeout(toastNewAlerts, 300);
         } catch (e) { restore(); toast("Error: " + e.message, "err"); }
         setSyncing(false);
       }
@@ -4663,6 +5135,24 @@
           case "deleteAccount":
             if (id) deleteAccount(id);
             break;
+          case "advancePhase":
+            if (id) advancePhase(id);
+            break;
+          case "requestPayout":
+            if (id) requestPayout(id);
+            break;
+          case "deletePayout":
+            if (id) deletePayout(id);
+            break;
+          case "openAlertsModal":
+            openAlertsModal();
+            break;
+          case "closeAlertsModal":
+            closeAlertsModal();
+            break;
+          case "markAccountLost":
+            if (id) markAccountLost(id);
+            break;
 
           // ── Strategies ──
           case "openStratModal":
@@ -4961,8 +5451,54 @@
 
       // ── EXPORTAR TRADES DO DIA ────────────────────────────────────────────────
 
+      function exportTodayTrades() {
+        const today = new Date().toISOString().slice(0, 10);
+        const data = filtT().filter(t => t.date && t.date.slice(0, 10) === today);
+
+        if (!data.length) {
+          toast('Sem trades hoje para exportar.', 'err');
+          return;
+        }
+
+        const headers = ['Data/Hora', 'Conta', 'Ativo', 'Direção', 'Lotes', 'PnL ($)', 'Risco%', 'R:R', 'Resultado', 'Sessão', 'Estratégia', 'Setup', 'Notas'];
+
+        const rows = data.map(t => {
+          const acc   = S.accounts.find(a => a.id === t.accountId);
+          const strat = S.strategies.find(s => s.id === t.strategyId);
+          const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+          return [
+            esc(t.date ? new Date(t.date).toLocaleString('pt-PT') : ''),
+            esc(acc?.name ?? ''),
+            esc(t.asset ?? ''),
+            esc(t.dir ?? ''),
+            esc(t.lots ?? ''),
+            esc(t.pnl ?? 0),
+            esc(t.riskPct ?? ''),
+            esc(t.rr ?? ''),
+            esc(t.result ?? ''),
+            esc(t.session ?? ''),
+            esc(strat?.name ?? ''),
+            esc(t.setup ?? ''),
+            esc(t.notes ?? ''),
+          ].join(',');
+        });
+
+        const csv = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `trades_${today}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast(`✓ ${data.length} trade${data.length > 1 ? 's' : ''} exportada${data.length > 1 ? 's' : ''} (${today})`);
+      }
+
+      // ── CSV IMPORT ────────────────────────────────────────────────────────────
+
       let _csvRows = [];
-      let _csvFile = null;
 
       function openCsvModal() {
         // Populate account selector
@@ -5115,7 +5651,6 @@
           errEl.style.display = 'block';
           return;
         }
-        _csvFile = file;
         const reader = new FileReader();
         reader.onload = e => {
           try {
@@ -5158,46 +5693,49 @@
       }
 
       async function importCsvTrades() {
-        // Prefer server-side import using api/import_trades.php
+        if (!_csvRows.length) return;
         const accountId = document.getElementById('csvAccountSel').value;
         if (!accountId) return toast('Seleciona uma conta!', 'err');
         const btn = document.getElementById('csvImportBtn');
         btn.disabled = true;
-        try {
-          if (!_csvFile) {
-            // fallback: if no file (shouldn't happen) use parsed rows (client-side)
-            if (!_csvRows.length) { btn.disabled = false; return; }
-            let done = 0, errors = 0;
-            for (const row of _csvRows) {
-              try {
-                const payload = { user_id: S.user.id, account_id: accountId, trade_date: row.tradeDate, asset: row.asset, direction: row.direction, lots: row.lots, pnl: row.pnl, result: row.result, session: row.session, notes: 'Importado (cliente)' };
-                const { data } = await api.post('api/trades.php', payload);
-                S.trades.unshift(mapTrade(data));
-                done++;
-              } catch (e) { errors++; }
-            }
-            toast(errors ? `✓ ${done} trades importadas (${errors} erros)` : `✓ ${done} trades importadas com sucesso!`);
-          } else {
-            const fd = new FormData();
-            fd.append('file', _csvFile);
-            fd.append('account_id', accountId);
-            const res = await fetch('api/import_trades.php', { method: 'POST', body: fd, credentials: 'include' });
-            const json = await res.json();
-            if (!res.ok) throw new Error(json.error || 'Import failed');
-            // Reload data from server to reflect inserted trades
-            await loadAll();
-            toast(`Import: parsed ${json.parsed}, inserted ${json.inserted}, skipped_old_date ${json.skipped_old_date}, skipped_duplicate_or_error ${json.skipped_duplicate_or_error}`);
-          }
-        } catch (e) {
-          toast('Erro: ' + (e.message || e), 'err');
-          console.error(e);
+        const progressEl = document.getElementById('csvProgress');
+        const progressBar = document.getElementById('csvProgressBar');
+        const progressText = document.getElementById('csvProgressText');
+        progressEl.style.display = '';
+        let done = 0, errors = 0;
+        for (const row of _csvRows) {
+          try {
+            const payload = {
+              account_id: accountId,
+              trade_date: row.tradeDate,
+              asset: row.asset,
+              direction: row.direction,
+              lots: row.lots,
+              pnl: row.pnl,
+              result: row.result,
+              session: row.session,
+              risk_pct: null, rr: null, setup: null,
+              notes: 'Importado do TradingView Paper Trading',
+              images: [],
+            };
+            const { data } = await api.post('api/trades.php', payload);
+            S.trades.unshift(mapTrade(data));
+            done++;
+          } catch(e) { errors++; }
+          const pct = Math.round(((done + errors) / _csvRows.length) * 100);
+          progressBar.style.width = pct + '%';
+          progressText.textContent = `${done + errors} / ${_csvRows.length}`;
         }
+        renderTrades();
+        renderDash();
         btn.disabled = false;
+        progressEl.style.display = 'none';
+        closeModal('csvImportModal');
         document.getElementById('csvStep2').style.display = 'none';
         document.getElementById('csvStep1').style.display = '';
         _csvRows = [];
-        _csvFile = null;
-        closeModal('csvImportModal');
+        toast(errors ? `✓ ${done} trades importadas (${errors} erros)` : `✓ ${done} trades importadas com sucesso!`);
+        setTimeout(toastNewAlerts, 400);
       }
 
       // CSV drag & drop and file input wiring (runs after DOM ready)
@@ -5247,6 +5785,17 @@
       </div>
     </div>
   
+    <!-- ALERTS MODAL -->
+    <div class="modal-overlay" id="alertsModal">
+      <div class="modal-box" style="max-width:560px">
+        <div class="modal-header">
+          <div class="modal-title">🔔 Alertas</div>
+          <button class="modal-close" data-action="closeAlertsModal">✕</button>
+        </div>
+        <div id="alertsBody"></div>
+      </div>
+    </div>
+
     <!-- CSV IMPORT MODAL -->
     <div class="modal-overlay" id="csvImportModal">
       <div class="modal-box" style="max-width:560px">

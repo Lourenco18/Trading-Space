@@ -5,8 +5,57 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'trading_space');
 
-// Iniciar sessão PHP nativa — mais simples e fiável que ficheiros
-session_start();
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
+
+header('Content-Type: application/json; charset=utf-8');
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+// ── Helper central para devolver sempre JSON, mesmo em erro ──────────────────────
+function sendJsonError($msg, $code = 500) {
+    if (!headers_sent()) {
+        http_response_code($code);
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    echo json_encode(['error' => $msg]);
+    exit;
+}
+
+// Apanha exceções não tratadas (ex: PDOException) e devolve sempre JSON legível
+set_exception_handler(function ($e) {
+    sendJsonError('Erro no servidor: ' . $e->getMessage(), 500);
+});
+
+// IMPORTANTE: só converte erros REALMENTE fatais em excepção.
+// Nunca converte warnings/notices/deprecated — esses são normais em PHP
+// e convertê-los em erro fatal rebentava a app sem motivo real (bug da v1).
+set_error_handler(function ($severity, $message, $file, $line) {
+    $fatal = [E_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR, E_CORE_ERROR, E_COMPILE_ERROR];
+    if (in_array($severity, $fatal, true)) {
+        throw new ErrorException($message, 0, $severity, $file, $line);
+    }
+    return true; // ignora silenciosamente avisos sem importância
+});
+
+// Rede de segurança: apanha erros fatais que escapem aos handlers acima
+// (ex: erro de sintaxe num ficheiro incluído, esgotar memória, etc.)
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        sendJsonError(
+            'Erro fatal no servidor: ' . $e['message'] . ' (' . basename($e['file']) . ':' . $e['line'] . ')',
+            500
+        );
+    }
+});
 
 function getDB() {
     static $pdo = null;
@@ -23,17 +72,8 @@ function getDB() {
         );
         return $pdo;
     } catch (PDOException $e) {
-        http_response_code(500);
-        die(json_encode(['error' => 'DB connection failed: ' . $e->getMessage()]));
+        sendJsonError('DB connection failed: ' . $e->getMessage(), 500);
     }
-}
-
-// Headers
-header('Content-Type: application/json; charset=utf-8');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
 }
 
 function body() {

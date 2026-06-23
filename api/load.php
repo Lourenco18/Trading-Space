@@ -9,11 +9,13 @@ $accounts   = $db->prepare('SELECT * FROM accounts   WHERE user_id = ? ORDER BY 
 $strategies = $db->prepare('SELECT * FROM strategies WHERE user_id = ? ORDER BY created_at ASC');
 $trades     = $db->prepare('SELECT * FROM trades     WHERE user_id = ? ORDER BY trade_date DESC');
 $notes      = $db->prepare('SELECT * FROM daily_notes WHERE user_id = ? ORDER BY note_date DESC');
+$payouts    = $db->prepare('SELECT * FROM payouts     WHERE user_id = ? ORDER BY payout_date DESC');
 
-$accounts->execute([$uid]);   $accData  = $accounts->fetchAll();
+$accounts->execute([$uid]);   $accData   = $accounts->fetchAll();
 $strategies->execute([$uid]); $stratData = $strategies->fetchAll();
 $trades->execute([$uid]);     $tradeData = $trades->fetchAll();
 $notes->execute([$uid]);      $noteData  = $notes->fetchAll();
+$payouts->execute([$uid]);    $payoutData = $payouts->fetchAll();
 
 // Parse JSON fields stored as strings in MySQL
 foreach ($stratData as &$r) {
@@ -29,4 +31,5 @@ ok([
     'strategies' => $stratData,
     'trades'     => $tradeData,
     'notes'      => $noteData,
+    'payouts'    => $payoutData,
 ]);
