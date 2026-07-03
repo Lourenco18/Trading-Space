@@ -1,13 +1,3 @@
-// run-analysis.js
-// Calls the Claude API (with web search) to produce a fundamental analysis
-// for XAU/USD, US100 and US30, then POSTs the result to your live site's
-// api/market.php endpoint.
-//
-// Requires environment variables:
-//   ANTHROPIC_API_KEY   - your Claude API key
-//   SITE_URL            - e.g. https://your-domain.com  (no trailing slash)
-//   MARKET_WRITE_SECRET - must match MARKET_WRITE_SECRET in api/config.php
-
 const SESSION = process.argv[2]; // "london" or "newyork"
 
 if (!SESSION || !["london", "newyork"].includes(SESSION)) {
