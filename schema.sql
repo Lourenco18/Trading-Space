@@ -75,6 +75,16 @@ CREATE TABLE IF NOT EXISTS trades (
   INDEX idx_trades_date    (trade_date)
 );
 
+CREATE TABLE IF NOT EXISTS market_analysis (
+  id                VARCHAR(36)  NOT NULL PRIMARY KEY,
+  analysis_date     DATE         NOT NULL,
+  session_label     VARCHAR(20)  NOT NULL,
+  generated_at_utc  DATETIME     NOT NULL,
+  pairs             JSON         NOT NULL,
+  created_at        DATETIME     NOT NULL DEFAULT NOW(),
+  INDEX idx_market_created (created_at)
+);
+
 CREATE TABLE IF NOT EXISTS daily_notes (
   id         VARCHAR(36) NOT NULL PRIMARY KEY,
   user_id    VARCHAR(36) NOT NULL,

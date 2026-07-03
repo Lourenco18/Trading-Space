@@ -5,6 +5,11 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'trading_space');
 
+// Shared secret used by the automated market-analysis job (GitHub Actions)
+// to authenticate when it POSTs a new reading. Change this to a long random
+// string, and use the SAME value as the MARKET_WRITE_SECRET GitHub secret.
+define('MARKET_WRITE_SECRET', 'dnhsa76r25427nimkksm');
+
 
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
