@@ -26,6 +26,7 @@
         --green: #4ade80;
         --red: #f87171;
         --yellow: #fbbf24;
+        --teal: #2dd4d4;
         --text: #e2e8f0;
         --text2: #94a3b8;
         --card: #16161f;
@@ -603,6 +604,212 @@
         background: var(--accent);
         border-radius: 2px;
         transition: width 0.4s;
+      }
+
+      /* ── HERO (Net P&L) ── */
+      .hero-card {
+        background: linear-gradient(135deg, var(--card), var(--bg2));
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 22px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .hero-label {
+        font-size: 12px;
+        color: var(--text2);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+      .hero-val {
+        font-size: 34px;
+        font-weight: 700;
+        font-family: "DM Mono", monospace;
+        letter-spacing: -0.5px;
+        transition: filter 0.15s;
+      }
+      .hero-val.blurred {
+        filter: blur(9px);
+        user-select: none;
+      }
+      .hero-toggle {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        color: var(--text2);
+        border-radius: 20px;
+        padding: 7px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s;
+      }
+      .hero-toggle:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ── GAUGES (Profit Factor / Win Rate donuts) ── */
+      .viz-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 900px) {
+        .viz-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .gauge-card {
+        display: flex;
+        flex-direction: column;
+      }
+      .gauge-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+      .gauge-big-val {
+        font-size: 26px;
+        font-weight: 700;
+        font-family: "DM Mono", monospace;
+      }
+      .gauge-note {
+        font-size: 12px;
+        color: var(--text2);
+        margin-top: 6px;
+        max-width: 150px;
+        line-height: 1.5;
+      }
+      .gauge-note b {
+        color: var(--text);
+      }
+      .donut-wrap {
+        flex-shrink: 0;
+        position: relative;
+        width: 92px;
+        height: 92px;
+      }
+      .donut-wrap svg {
+        transform: rotate(-90deg);
+      }
+      .donut-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .donut-center-val {
+        font-size: 17px;
+        font-weight: 700;
+        font-family: "DM Mono", monospace;
+      }
+      .donut-center-lbl {
+        font-size: 9px;
+        color: var(--text2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 1px;
+      }
+
+      /* ── AVG WIN/LOSS BAR ── */
+      .avgwl-big {
+        font-size: 26px;
+        font-weight: 700;
+        font-family: "DM Mono", monospace;
+        margin-bottom: 14px;
+      }
+      .avgwl-bar {
+        display: flex;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        background: var(--bg3);
+      }
+      .avgwl-seg-win {
+        background: var(--green);
+        border-radius: 4px 0 0 4px;
+      }
+      .avgwl-seg-loss {
+        background: var(--red);
+        border-radius: 0 4px 4px 0;
+      }
+      .avgwl-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: "DM Mono", monospace;
+      }
+
+      /* ── EQUITY CURVE ── */
+      .equity-chart-wrap {
+        height: 200px;
+        position: relative;
+      }
+
+      /* ── PERFORMANCE HEATMAP ── */
+      .heatmap-wrap {
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .heatmap-months {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 16px;
+        gap: 3px;
+        margin-bottom: 6px;
+        font-size: 10px;
+        color: var(--text2);
+        font-family: "DM Mono", monospace;
+      }
+      .heatmap-grid {
+        display: grid;
+        grid-template-rows: repeat(7, 16px);
+        grid-auto-flow: column;
+        grid-auto-columns: 16px;
+        gap: 3px;
+      }
+      .heatmap-cell {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        background: var(--bg3);
+        cursor: default;
+        transition: transform 0.1s;
+      }
+      .heatmap-cell:hover {
+        transform: scale(1.2);
+      }
+      .heatmap-legend {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 10px;
+        font-size: 10px;
+        color: var(--text2);
+      }
+      .heatmap-legend .heatmap-cell {
+        width: 11px;
+        height: 11px;
+        cursor: default;
+      }
+      .heatmap-legend .heatmap-cell:hover {
+        transform: none;
       }
 
       /* ── TABLE ── */
@@ -2201,31 +2408,102 @@
               </div>
             </div>
             <div class="stats-grid" id="statsGrid"></div>
-            <div class="dash-grid">
-              <div class="card">
-                <div class="card-title">
-                  PnL Recente <span class="card-badge">últimas 20</span>
+
+            <!-- NET P&L HERO -->
+            <div class="hero-card">
+              <div>
+                <div class="hero-label">Net P&amp;L</div>
+                <div class="hero-val" id="heroPnl">+$0.00</div>
+              </div>
+              <button class="hero-toggle" data-action="toggleHeroPnl">
+                <span id="heroToggleIcon">◎</span> <span id="heroToggleTxt">Hide</span>
+              </button>
+            </div>
+
+            <!-- GAUGES: Profit Factor / Win Rate / Avg Win-Loss -->
+            <div class="viz-grid">
+              <div class="card gauge-card">
+                <div class="card-title">Profit Factor</div>
+                <div class="gauge-row">
+                  <div>
+                    <div class="gauge-big-val" id="pfGaugeVal">—</div>
+                    <div class="gauge-note" id="pfGaugeNote">As tuas trades ainda não têm dados suficientes.</div>
+                  </div>
+                  <div class="donut-wrap" id="pfDonut"></div>
                 </div>
-                <div class="pnl-chart" id="pnlChart"></div>
+              </div>
+              <div class="card gauge-card">
+                <div class="card-title">Win Rate</div>
+                <div class="gauge-row">
+                  <div>
+                    <div class="gauge-big-val" id="wrGaugeVal">—</div>
+                    <div class="gauge-note" id="wrGaugeNote">Sem trades ainda.</div>
+                  </div>
+                  <div class="donut-wrap" id="wrDonut"></div>
+                </div>
               </div>
               <div class="card">
-                <div class="card-title">Últimas Trades</div>
-                <div id="recentTrades"></div>
+                <div class="card-title">Avg. Win / Loss</div>
+                <div class="avgwl-big" id="avgwlMult">—</div>
+                <div class="avgwl-bar"><div class="avgwl-seg-win" id="avgwlSegWin" style="width:50%"></div><div class="avgwl-seg-loss" id="avgwlSegLoss" style="width:50%"></div></div>
+                <div class="avgwl-labels"><span style="color:var(--green)" id="avgwlWinLbl">+0.00</span><span style="color:var(--red)" id="avgwlLossLbl">-0.00</span></div>
               </div>
             </div>
+
+            <!-- EQUITY CURVE -->
+            <div class="card">
+              <div class="card-title">Equity Curve <span class="card-badge" id="equityPctBadge">0%</span></div>
+              <div class="equity-chart-wrap"><canvas id="equityCanvas"></canvas></div>
+            </div>
+
+            <!-- PERFORMANCE HEATMAP -->
+            <div class="card">
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+                <span>Performance Heatmap</span>
+              </div>
+              <div class="heatmap-wrap">
+                <div class="heatmap-months" id="heatmapMonths"></div>
+                <div class="heatmap-grid" id="heatmapGrid"></div>
+              </div>
+              <div class="heatmap-legend">
+                <span>Menos</span>
+                <div class="heatmap-cell" style="background:var(--bg3)"></div>
+                <div class="heatmap-cell" style="background:rgba(74,222,128,.35)"></div>
+                <div class="heatmap-cell" style="background:rgba(74,222,128,.7)"></div>
+                <div class="heatmap-cell" style="background:var(--green)"></div>
+                <span>Mais</span>
+              </div>
+            </div>
+
+
             <div class="card" style="padding: 0">
               <div style="padding: 16px 20px 0">
                 <div class="card-title" style="margin-bottom: 12px">
-                  Por Estratégia
+                  Por Sessão
                 </div>
               </div>
               <div class="ds-head">
-                <span id="dsh0">Strategy</span><span id="dsh1">Trades</span
+                <span id="dsh0">Session</span><span id="dsh1">Trades</span
                 ><span id="dsh2">PnL</span><span id="dsh3">Win Rate</span
                 ><span id="dsh4">W/L</span><span id="dsh5">Avg Win</span
                 ><span id="dsh6">Avg Loss</span>
               </div>
               <div id="dashStrat"></div>
+            </div>
+
+            <div class="card" style="padding: 0; margin-top: 16px">
+              <div style="padding: 16px 20px 0">
+                <div class="card-title" style="margin-bottom: 12px">
+                  Por Dia da Semana
+                </div>
+              </div>
+              <div class="ds-head">
+                <span id="dsh7">Day</span><span id="dsh8">Trades</span
+                ><span id="dsh9">PnL</span><span id="dsh10">Win Rate</span
+                ><span id="dsh11">W/L</span><span id="dsh12">Avg Win</span
+                ><span id="dsh13">Avg Loss</span>
+              </div>
+              <div id="dashWeekday"></div>
             </div>
           </div>
 
@@ -3438,6 +3716,15 @@
             />
           </div>
           <div class="form-field">
+            <label>Risco da Trade ($)</label
+            ><input
+              type="number"
+              id="tRiskUsd"
+              step="0.01"
+              placeholder="ex: 50"
+            />
+          </div>
+          <div class="form-field">
             <label>Risco da Trade (%)</label
             ><input
               type="number"
@@ -3525,6 +3812,9 @@
         <div id="detailBody"></div>
       </div>
     </div>
+
+    <!-- ── CHART.JS (equity curve) ── -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
     <!-- ── ALL JAVASCRIPT ── -->
     <script>
@@ -3636,6 +3926,7 @@
         lots: r.lots,
         pnl: +r.pnl || 0,
         riskPct: r.risk_pct || "",
+        riskAmount: r.risk_amount !== null && r.risk_amount !== undefined ? +r.risk_amount : "",
         rr: r.rr || "",
         result: r.result,
         session: r.session,
@@ -4474,6 +4765,207 @@
         "XAUUSD",
       ];
 
+      function getTradeAssetLabel() {
+        const assetSel = document.getElementById("tAsset");
+        if (!assetSel) return "";
+        if (assetSel.value === "__custom") {
+          return document.getElementById("tAssetCustom")?.value.trim() || "";
+        }
+        return assetSel.value || "";
+      }
+
+      function getSelectedAccountCapital() {
+        const accountId = document.getElementById("tAcc")?.value;
+        if (!accountId) return 0;
+        const account = S.accounts.find((a) => a.id === accountId);
+        return account ? (parseFloat(account.capital) || 0) : 0;
+      }
+
+      function parseRRMultiplier(value) {
+        const text = String(value || "").trim();
+        if (!text) return 2;
+        const match = text.match(/(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)/i);
+        if (!match) return null;
+        return Number(match[2]) / Number(match[1]);
+      }
+
+      function buildVolumeTradeTemplate(direction) {
+        const directionText = /buy|bullish|long/i.test(String(direction || "")) ? "Bullish" : "Bearish";
+        const bullish = directionText === "Bullish";
+
+        return bullish
+          ? "1-Enter the zone\n2- MSS to the upside\n3-Creation of a Bullish FVG\n4-Retest on FVG \n5-Enter\n6-BE at 1:2 RR \n7-TP at 1:3 RR\nRisk Explanation:"
+          : "1-Enter the zone\n2- MSS to the downside\n3-Creation of a Bearish FVG\n4-Retest on FVG \n5-Enter\n6-BE at 1:2 RR \n7-TP at 1:3 RR\nRisk Explanation:";
+      }
+
+      function buildCvdTradeTemplate(direction) {
+        const bullish = /buy|bullish|long/i.test(String(direction || ""));
+
+        return bullish
+          ? "1-accumulation\n2-strong moviment to the upside(volume pocket)\n3-CVD diversion\n4-Enter\n5-BE at 1:2 RR \n6-TP at 1:3 RR\nRisk Explanation:"
+          : "1-accumulation\n2-strong moviment to the downside(volume pocket)\n3-CVD diversion\n4-Enter\n5-BE at 1:2 RR \n6-TP at 1:3 RR\nRisk Explanation:";
+      }
+
+      function buildStrategyAutoNote(strategyId) {
+        if (!strategyId) return "";
+        const strategy = S.strategies.find((s) => s.id === strategyId);
+        if (!strategy) return "";
+
+        const direction = document.getElementById("tDir")?.value || "";
+
+        if (/cvd/i.test(strategy.name || "")) {
+          return buildCvdTradeTemplate(direction);
+        }
+
+        if (/volume/i.test(strategy.name || "")) {
+          return buildVolumeTradeTemplate(direction);
+        }
+
+        const asset = getTradeAssetLabel();
+        const session = document.getElementById("tSess")?.value || "";
+        const setup = document.getElementById("tSetup")?.value.trim() || "";
+        const result = document.getElementById("tRes")?.value || "";
+
+        const blocks = [
+          `${strategy.name} | ${direction} ${asset || "PAIR"} ${session ? `- ${session}` : ""}`.trim(),
+        ];
+
+        if (strategy.desc) blocks.push(`Context: ${strategy.desc.trim().replace(/\s+/g, " ")}`);
+        if (setup) blocks.push(`Setup: ${setup}`);
+        if (strategy.entryRules) blocks.push(`Entry: ${strategy.entryRules.trim().replace(/\s+/g, " ")}`);
+        if (strategy.exitRules) blocks.push(`Exit: ${strategy.exitRules.trim().replace(/\s+/g, " ")}`);
+        if (strategy.minRR) blocks.push(`Target RR: ${strategy.minRR}`);
+        if (strategy.riskPct) blocks.push(`Risk: ${strategy.riskPct}%`);
+        if (result) blocks.push(`Result: ${result}`);
+        if (strategy.notes) blocks.push(`Strategy Notes: ${strategy.notes.trim().replace(/\s+/g, " ")}`);
+
+        return blocks.join(" • ");
+      }
+
+      function applyStrategyAutoNote(strategyId = null) {
+        const stratSel = document.getElementById("tStrat");
+        const notesEl = document.getElementById("tNotes");
+        if (!stratSel || !notesEl) return;
+
+        const selected = strategyId ?? stratSel.value;
+        if (!selected) return;
+
+        const text = buildStrategyAutoNote(selected);
+        if (!text) return;
+
+        const shouldReplace = !notesEl.value.trim() || notesEl.dataset.autofill === "strategy";
+        if (shouldReplace) {
+          notesEl.value = text;
+          notesEl.dataset.autofill = "strategy";
+        }
+      }
+
+      function syncTradeRiskFields() {
+        const capital = getSelectedAccountCapital();
+        const riskUsdEl = document.getElementById("tRiskUsd");
+        const riskPctEl = document.getElementById("tRisk");
+        const rrEl = document.getElementById("tRR");
+        const pnlEl = document.getElementById("tPnL");
+
+        if (!riskUsdEl || !riskPctEl) return;
+
+        const riskUsd = parseFloat(riskUsdEl.value);
+        const targetProfit = parseFloat(pnlEl?.value || "");
+
+        if (capital > 0 && Number.isFinite(riskUsd) && riskUsd > 0) {
+          const percent = (riskUsd / capital) * 100;
+          riskPctEl.value = percent.toFixed(2);
+          riskPctEl.dataset.autofill = "risk";
+        }
+
+        if (rrEl) {
+          if (Number.isFinite(riskUsd) && riskUsd > 0 && Number.isFinite(targetProfit) && targetProfit > 0) {
+            const ratio = Math.abs(targetProfit / riskUsd);
+            rrEl.value = `1:${ratio.toFixed(2).replace(/\.00$/, "").replace(/0$/, "")}`;
+            rrEl.dataset.autofill = "risk";
+          } else {
+            rrEl.value = "";
+            rrEl.dataset.autofill = "";
+          }
+        }
+
+        if (pnlEl && pnlEl.dataset.autofill === "risk") {
+          pnlEl.dataset.autofill = "";
+        }
+      }
+
+      function bindTradeStrategyAutoFill() {
+        const stratSel = document.getElementById("tStrat");
+        const notesEl = document.getElementById("tNotes");
+        if (!stratSel || !notesEl || stratSel.dataset.strategyAutoBound === "true") return;
+
+        stratSel.addEventListener("change", (event) => {
+          const selected = event.target.value;
+          if (!selected) return;
+          applyStrategyAutoNote(selected);
+        });
+
+        ["tAsset", "tAssetCustom", "tDir", "tSess", "tSetup", "tRes", "tAcc"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.addEventListener("input", () => {
+            if (notesEl.dataset.autofill === "strategy") applyStrategyAutoNote(stratSel.value);
+            if (id === "tAcc" || id === "tRiskUsd") syncTradeRiskFields();
+          });
+          el.addEventListener("change", () => {
+            if (notesEl.dataset.autofill === "strategy") applyStrategyAutoNote(stratSel.value);
+            if (id === "tAcc" || id === "tRiskUsd") syncTradeRiskFields();
+          });
+        });
+
+        const riskUsdEl = document.getElementById("tRiskUsd");
+        const pnlEl = document.getElementById("tPnL");
+        if (riskUsdEl) {
+          riskUsdEl.addEventListener("input", syncTradeRiskFields);
+          riskUsdEl.addEventListener("change", syncTradeRiskFields);
+        }
+        if (pnlEl) {
+          pnlEl.addEventListener("input", syncTradeRiskFields);
+          pnlEl.addEventListener("change", syncTradeRiskFields);
+        }
+
+        const riskPctEl = document.getElementById("tRisk");
+        if (riskPctEl) {
+          riskPctEl.addEventListener("input", () => {
+            if (riskPctEl.dataset.autofill === "risk") {
+              const riskUsd = parseFloat(document.getElementById("tRiskUsd")?.value || "");
+              const capital = getSelectedAccountCapital();
+              if (capital > 0 && Number.isFinite(riskUsd) && riskUsd > 0) {
+                riskPctEl.value = ((riskUsd / capital) * 100).toFixed(2);
+              }
+            }
+          });
+        }
+
+        const rrEl = document.getElementById("tRR");
+        if (rrEl) {
+          rrEl.addEventListener("input", () => {
+            if (rrEl.dataset.autofill === "risk") {
+              const riskUsd = parseFloat(document.getElementById("tRiskUsd")?.value || "");
+              const pnlVal = parseFloat(document.getElementById("tPnL")?.value || "");
+              if (Number.isFinite(riskUsd) && riskUsd > 0 && Number.isFinite(pnlVal) && pnlVal > 0) {
+                const ratio = Math.abs(pnlVal / riskUsd);
+                rrEl.value = `1:${ratio.toFixed(2).replace(/\.00$/, "").replace(/0$/, "")}`;
+              } else {
+                rrEl.value = "";
+              }
+            }
+          });
+        }
+
+        notesEl.addEventListener("input", () => {
+          if (notesEl.value.trim()) notesEl.dataset.autofill = "manual";
+          else notesEl.dataset.autofill = "";
+        });
+
+        stratSel.dataset.strategyAutoBound = "true";
+      }
+
       function openStratModal(id = null) {
         _editStratId = id;
         _selColor = "#818cf8";
@@ -4664,6 +5156,7 @@
       }
 
       function openTradeModal(id = null) {
+        bindTradeStrategyAutoFill();
         _editTradeId = id;
         _pendingImgs = [];
         document.getElementById("imgPreview").innerHTML = "";
@@ -4692,7 +5185,7 @@
             document.getElementById("tAssetCustom").value = tr.asset || "";
           }
           document.getElementById("tDir").value = tr.dir || "Buy";
-          ["tLots", "tPnL", "tRisk", "tRR", "tSetup", "tNotes"].forEach(
+          ["tLots", "tPnL", "tRisk", "tRiskUsd", "tRR", "tSetup", "tNotes"].forEach(
             (id2) => {
               const e = document.getElementById(id2);
               if (e)
@@ -4701,6 +5194,7 @@
                     tLots: tr.lots,
                     tPnL: tr.pnl,
                     tRisk: tr.riskPct,
+                    tRiskUsd: tr.riskAmount,
                     tRR: tr.rr,
                     tSetup: tr.setup,
                     tNotes: tr.notes,
@@ -4710,6 +5204,12 @@
           document.getElementById("tRes").value = tr.result || "Win";
           document.getElementById("tSess").value = tr.session || "London";
           document.getElementById("tStrat").value = tr.strategyId || "";
+          if (!document.getElementById("tNotes").value.trim() && tr.strategyId) {
+            applyStrategyAutoNote(tr.strategyId);
+          }
+          if (document.getElementById("tRiskUsd").value && getSelectedAccountCapital() > 0) {
+            syncTradeRiskFields();
+          }
           _pendingImgs = tr.images ? [...tr.images] : [];
           renderImgPreview();
         } else {
@@ -4733,6 +5233,7 @@
           document.getElementById("tAsset").value = "EUR/USD";
           if (S.accounts.length)
             document.getElementById("tAcc").value = S.accounts[0].id;
+          document.getElementById("tNotes").dataset.autofill = "";
         }
         openModal("tradeModal");
       }
@@ -4767,6 +5268,8 @@
         const accountId = document.getElementById("tAcc").value;
         if (!accountId) return toast("Select an account!", "err");
         if (!asset) return toast("Asset is required!", "err");
+        const riskUsd = parseFloat(document.getElementById("tRiskUsd").value) || 0;
+        const riskPctValue = document.getElementById("tRisk").value;
         const row = {
           user_id: S.user.id,
           account_id: accountId,
@@ -4776,7 +5279,8 @@
           direction: document.getElementById("tDir").value,
           lots: parseFloat(document.getElementById("tLots").value) || null,
           pnl: parseFloat(document.getElementById("tPnL").value) || 0,
-          risk_pct: parseFloat(document.getElementById("tRisk").value) || null,
+          risk_pct: riskPctValue ? parseFloat(riskPctValue) : (riskUsd > 0 ? ((riskUsd / Math.max(getSelectedAccountCapital(), 1)) * 100) : null),
+          risk_amount: riskUsd > 0 ? riskUsd : null,
           rr: document.getElementById("tRR").value || null,
           result: document.getElementById("tRes").value,
           session: document.getElementById("tSess").value,
@@ -4961,14 +5465,7 @@
             : "—";
         const sg = document.getElementById("statsGrid");
         if (sg)
-          sg.innerHTML = `
-    <div class="stat-card"><div class="stat-label">Total PnL</div><div class="stat-val ${pnl >= 0 ? "green" : "red"}">${fmt(pnl)}</div><div class="stat-sub">${data.length} trades</div></div>
-    <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-val accent">${wr}%</div><div class="wr-bar"><div class="wr-fill" style="width:${wr}%"></div></div></div>
-    <div class="stat-card"><div class="stat-label">W / L / BE</div><div class="stat-val">${wins}<span style="color:var(--text2);font-size:14px"> / ${losses} / ${be}</span></div></div>
-    <div class="stat-card"><div class="stat-label">Avg Win</div><div class="stat-val green">+${avgW}</div></div>
-    <div class="stat-card"><div class="stat-label">Avg Loss</div><div class="stat-val red">${avgL}</div></div>
-    <div class="stat-card"><div class="stat-label">Profit Factor</div><div class="stat-val accent">${pf}</div></div>
-    <div class="stat-card"><div class="stat-label">Avg Risco %</div><div class="stat-val" style="color:var(--yellow);font-size:18px">${avgRisk}${avgRisk !== "—" ? "%" : ""}</div></div>`;
+          sg.innerHTML = ``;
         const recent = [...data]
           .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
           .slice(-20);
@@ -4995,40 +5492,293 @@
                 .join("")
             : '<div class="empty" style="padding:20px"><p>Sem trades</p></div>';
         const ds = document.getElementById("dashStrat");
-        if (!ds) return;
-        if (!S.strategies.length) {
-          ds.innerHTML =
-            '<div class="empty" style="padding:24px"><p>Create strategies to see stats here.</p></div>';
-          return;
+        const dw = document.getElementById("dashWeekday");
+        if (ds) {
+          const sessionRows = [...new Set(data.map((t) => t.session || "—"))]
+            .map((sessionName) => {
+              const st = data.filter((t) => (t.session || "—") === sessionName);
+              if (!st.length) return null;
+              const p = st.reduce((a, t) => a + (t.pnl || 0), 0),
+                w = st.filter((t) => t.result === "Win").length,
+                l = st.filter((t) => t.result === "Loss").length;
+              const wr2 = ((w / st.length) * 100).toFixed(1),
+                aW = w
+                  ? (
+                      st
+                        .filter((t) => t.result === "Win")
+                        .reduce((a, t) => a + (t.pnl || 0), 0) / w
+                    ).toFixed(2)
+                  : "0.00",
+                aL = l
+                  ? (
+                      st
+                        .filter((t) => t.result === "Loss")
+                        .reduce((a, t) => a + (t.pnl || 0), 0) / l
+                    ).toFixed(2)
+                  : "0.00";
+              return `<div class="ds-row"><span style="display:flex;align-items:center;gap:7px;font-weight:600">${sessionName}</span><span>${st.length}</span><span class="${p >= 0 ? "pnl-pos" : "pnl-neg"}">${fmt(p)}</span><span><span style="color:var(--accent2)">${wr2}%</span><div class="mini-wr"><div class="mini-wr-fill" style="width:${wr2}%"></div></div></span><span style="color:var(--text2)">${w}/${l}</span><span style="color:var(--green)">+${aW}</span><span style="color:var(--red)">${aL}</span></div>`;
+            })
+            .filter(Boolean);
+          ds.innerHTML = sessionRows.length
+            ? sessionRows.join("")
+            : '<div class="empty" style="padding:24px"><p>No trades with session data yet.</p></div>';
         }
-        const rows = S.strategies
-          .map((s) => {
-            const st = data.filter((t) => t.strategyId === s.id);
-            if (!st.length) return null;
-            const p = st.reduce((a, t) => a + (t.pnl || 0), 0),
-              w = st.filter((t) => t.result === "Win").length,
-              l = st.filter((t) => t.result === "Loss").length;
-            const wr2 = ((w / st.length) * 100).toFixed(1),
-              aW = w
-                ? (
-                    st
-                      .filter((t) => t.result === "Win")
-                      .reduce((a, t) => a + (t.pnl || 0), 0) / w
-                  ).toFixed(2)
-                : "0.00",
-              aL = l
-                ? (
-                    st
-                      .filter((t) => t.result === "Loss")
-                      .reduce((a, t) => a + (t.pnl || 0), 0) / l
-                  ).toFixed(2)
-                : "0.00";
-            return `<div class="ds-row"><span style="display:flex;align-items:center;gap:7px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:${s.color};display:inline-block;flex-shrink:0"></span>${s.name}</span><span>${st.length}</span><span class="${p >= 0 ? "pnl-pos" : "pnl-neg"}">${fmt(p)}</span><span><span style="color:var(--accent2)">${wr2}%</span><div class="mini-wr"><div class="mini-wr-fill" style="width:${wr2}%"></div></div></span><span style="color:var(--text2)">${w}/${l}</span><span style="color:var(--green)">+${aW}</span><span style="color:var(--red)">${aL}</span></div>`;
-          })
-          .filter(Boolean);
-        ds.innerHTML = rows.length
-          ? rows.join("")
-          : '<div class="empty" style="padding:24px"><p>No trades linked to strategies yet.</p></div>';
+
+        if (dw) {
+          const weekdayOrder = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+          const weekdayRows = weekdayOrder
+            .map((dayName) => {
+              const st = data.filter((t) => {
+                if (!t.date) return false;
+                const d = new Date(t.date);
+                return !Number.isNaN(d.getTime()) && weekdayOrder[d.getDay()] === dayName;
+              });
+              if (!st.length) return null;
+              const p = st.reduce((a, t) => a + (t.pnl || 0), 0),
+                w = st.filter((t) => t.result === "Win").length,
+                l = st.filter((t) => t.result === "Loss").length;
+              const wr2 = ((w / st.length) * 100).toFixed(1),
+                aW = w
+                  ? (
+                      st
+                        .filter((t) => t.result === "Win")
+                        .reduce((a, t) => a + (t.pnl || 0), 0) / w
+                    ).toFixed(2)
+                  : "0.00",
+                aL = l
+                  ? (
+                      st
+                        .filter((t) => t.result === "Loss")
+                        .reduce((a, t) => a + (t.pnl || 0), 0) / l
+                    ).toFixed(2)
+                  : "0.00";
+              return `<div class="ds-row"><span style="display:flex;align-items:center;gap:7px;font-weight:600">${dayName}</span><span>${st.length}</span><span class="${p >= 0 ? "pnl-pos" : "pnl-neg"}">${fmt(p)}</span><span><span style="color:var(--accent2)">${wr2}%</span><div class="mini-wr"><div class="mini-wr-fill" style="width:${wr2}%"></div></div></span><span style="color:var(--text2)">${w}/${l}</span><span style="color:var(--green)">+${aW}</span><span style="color:var(--red)">${aL}</span></div>`;
+            })
+            .filter(Boolean);
+          dw.innerHTML = weekdayRows.length
+            ? weekdayRows.join("")
+            : '<div class="empty" style="padding:24px"><p>No trades with weekday data yet.</p></div>';
+        }
+
+        renderHeroPnl(pnl);
+        renderGauges({ pf, wr, wins, losses, be, avgW, avgL });
+        renderEquityCurve(data);
+        renderHeatmap(data);
+      }
+
+      // ── HERO PNL (show/hide) ─────────────────────────────────────
+      let _heroHidden = false;
+      let _lastHeroPnl = 0;
+      function renderHeroPnl(pnl) {
+        _lastHeroPnl = pnl;
+        const el = document.getElementById("heroPnl");
+        if (!el) return;
+        el.textContent = fmt(pnl);
+        el.className = "hero-val" + (_heroHidden ? " blurred" : "");
+        el.style.color = pnl >= 0 ? "var(--green)" : "var(--red)";
+      }
+      function toggleHeroPnl() {
+        _heroHidden = !_heroHidden;
+        document.getElementById("heroToggleTxt").textContent = _heroHidden
+          ? "Show"
+          : "Hide";
+        renderHeroPnl(_lastHeroPnl);
+      }
+
+      // ── DONUT GAUGE HELPER (pure SVG, no dependency) ─────────────
+      function donutSVG(pct, colorMain, colorRest, size = 92, stroke = 10) {
+        const r = (size - stroke) / 2;
+        const c = 2 * Math.PI * r;
+        const p = Math.max(0, Math.min(100, pct));
+        const mainLen = (p / 100) * c;
+        return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+          <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${colorRest}" stroke-width="${stroke}"/>
+          <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${colorMain}" stroke-width="${stroke}"
+            stroke-dasharray="${mainLen} ${c - mainLen}" stroke-linecap="round"/>
+        </svg>`;
+      }
+      function renderGauges({ pf, wr, wins, losses, be, avgW, avgL }) {
+        const total = wins + losses + be;
+        const wrNum = total ? (wins / total) * 100 : 0;
+
+        // Profit factor donut (visual proxy: win-rate ring, same style as reference app)
+        const pfEl = document.getElementById("pfDonut");
+        if (pfEl) {
+          pfEl.innerHTML =
+            donutSVG(wrNum, "var(--green)", "rgba(248,113,113,.35)") +
+            `<div class="donut-center"><div class="donut-center-val" style="color:var(--accent)">${pf === "∞" ? "∞" : pf}</div><div class="donut-center-lbl">P/L</div></div>`;
+        }
+        document.getElementById("pfGaugeVal").textContent = pf === "∞" ? "∞" : pf;
+        document.getElementById("pfGaugeNote").innerHTML = total
+          ? `As tuas trades mostram ${parseFloat(pf) >= 1.5 || pf === "∞" ? "uma <b>vantagem forte</b>" : parseFloat(pf) >= 1 ? "uma <b>vantagem ligeira</b>" : "uma <b>vantagem fraca</b>"}`
+          : "Ainda sem dados suficientes.";
+
+        // Win rate donut
+        const wrEl = document.getElementById("wrDonut");
+        if (wrEl) {
+          wrEl.innerHTML =
+            donutSVG(wrNum, "var(--green)", "rgba(248,113,113,.35)") +
+            `<div class="donut-center"><div class="donut-center-val">${wins}</div><div class="donut-center-lbl">Wins</div></div>`;
+        }
+        document.getElementById("wrGaugeVal").textContent = total
+          ? `${wrNum.toFixed(1)}%`
+          : "—";
+        document.getElementById("wrGaugeNote").innerHTML = total
+          ? `Wins: <b style="color:var(--green)">${wins}</b>  Losses: <b style="color:var(--red)">${losses}</b>  BE: <b style="color:var(--accent2)">${be}</b>`
+          : "Sem trades ainda.";
+
+        // Avg win / loss bar
+        const aW = Math.abs(parseFloat(avgW) || 0),
+          aL = Math.abs(parseFloat(avgL) || 0);
+        const sum = aW + aL || 1;
+        document.getElementById("avgwlSegWin").style.width =
+          (aW / sum) * 100 + "%";
+        document.getElementById("avgwlSegLoss").style.width =
+          (aL / sum) * 100 + "%";
+        document.getElementById("avgwlWinLbl").textContent =
+          "+" + aW.toFixed(2);
+        document.getElementById("avgwlLossLbl").textContent =
+          "-" + aL.toFixed(2);
+        document.getElementById("avgwlMult").textContent = aL
+          ? (aW / aL).toFixed(1) + "x"
+          : "—";
+      }
+
+      // ── EQUITY CURVE (Chart.js) ──────────────────────────────────
+      let _equityChart = null;
+      function renderEquityCurve(data) {
+        const canvas = document.getElementById("equityCanvas");
+        if (!canvas || typeof Chart === "undefined") return;
+        const sorted = [...data]
+          .filter((t) => t.date)
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+        let running = 0;
+        const points = sorted.map((t) => {
+          running += t.pnl || 0;
+          return running;
+        });
+        const labels = sorted.map((t) => fmtD(t.date));
+        const startBase =
+          S.accounts.reduce((s, a) => s + (a.capital || 0), 0) || 10000;
+        const pctChange = startBase
+          ? ((running / startBase) * 100).toFixed(1)
+          : "0.0";
+        const badge = document.getElementById("equityPctBadge");
+        if (badge) {
+          badge.textContent = (running >= 0 ? "+" : "") + pctChange + "%";
+          badge.style.color = running >= 0 ? "var(--teal)" : "var(--red)";
+        }
+        const ctx = canvas.getContext("2d");
+        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, "rgba(45,212,212,.35)");
+        gradient.addColorStop(1, "rgba(45,212,212,0)");
+
+        if (_equityChart) _equityChart.destroy();
+        if (!points.length) return;
+        _equityChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                data: points,
+                borderColor: "#2dd4d4",
+                backgroundColor: gradient,
+                borderWidth: 2,
+                tension: 0.35,
+                fill: true,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                pointHoverBackgroundColor: "#2dd4d4",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: "index" },
+            plugins: { legend: { display: false } },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: {
+                  color: "#94a3b8",
+                  maxTicksLimit: 6,
+                  font: { family: "DM Mono", size: 10 },
+                },
+              },
+              y: {
+                grid: { color: "#2c2c3a" },
+                ticks: {
+                  color: "#94a3b8",
+                  font: { family: "DM Mono", size: 10 },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // ── PERFORMANCE HEATMAP (GitHub-style contribution grid) ─────
+      function renderHeatmap(data) {
+        const grid = document.getElementById("heatmapGrid");
+        const monthsEl = document.getElementById("heatmapMonths");
+        if (!grid || !monthsEl) return;
+        const byDay = {};
+        data.forEach((t) => {
+          if (t.date) {
+            const k = new Date(t.date).toISOString().slice(0, 10);
+            byDay[k] = (byDay[k] || 0) + (t.pnl || 0);
+          }
+        });
+        const maxAbs = Math.max(
+          ...Object.values(byDay).map((v) => Math.abs(v)),
+          1,
+        );
+        const today = new Date();
+        const totalWeeks = 20;
+        const start = new Date(today);
+        start.setDate(
+          start.getDate() - totalWeeks * 7 - start.getDay(),
+        );
+
+        const monthNamesShort = [
+          "Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez",
+        ];
+        let cellsHtml = "";
+        let monthsHtml = "";
+        let lastMonth = -1;
+        for (let w = 0; w <= totalWeeks; w++) {
+          const weekStart = new Date(start);
+          weekStart.setDate(weekStart.getDate() + w * 7);
+          if (weekStart.getMonth() !== lastMonth) {
+            monthsHtml += `<div style="grid-column:span 1">${monthNamesShort[weekStart.getMonth()]}</div>`;
+            lastMonth = weekStart.getMonth();
+          } else {
+            monthsHtml += `<div></div>`;
+          }
+          for (let d = 0; d < 7; d++) {
+            const day = new Date(weekStart);
+            day.setDate(day.getDate() + d);
+            if (day > today) {
+              cellsHtml += `<div class="heatmap-cell" style="visibility:hidden"></div>`;
+              continue;
+            }
+            const k = day.toISOString().slice(0, 10);
+            const v = byDay[k];
+            let bg = "var(--bg3)";
+            if (v !== undefined) {
+              const intensity = Math.min(1, Math.abs(v) / maxAbs);
+              bg =
+                v >= 0
+                  ? `rgba(74,222,128,${0.25 + intensity * 0.75})`
+                  : `rgba(248,113,113,${0.25 + intensity * 0.75})`;
+            }
+            cellsHtml += `<div class="heatmap-cell" style="background:${bg}" title="${k}${v !== undefined ? ": " + fmt(v) : ""}"></div>`;
+          }
+        }
+        grid.innerHTML = cellsHtml;
+        monthsEl.innerHTML = monthsHtml;
       }
 
       // ── CALENDAR ──────────────────────────────────────────────────
@@ -5340,6 +6090,9 @@
           // ── Nav ──
           case "nav":
             if (page) nav(page);
+            break;
+          case "toggleHeroPnl":
+            toggleHeroPnl();
             break;
           case "toggleSidebar":
             toggleSidebar();

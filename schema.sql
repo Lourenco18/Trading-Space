@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS trades (
   lots        DECIMAL(10,4),
   pnl         DECIMAL(15,2)  DEFAULT 0,
   risk_pct    DECIMAL(5,2),
+  risk_amount DECIMAL(15,2),
   rr          VARCHAR(20),
   result      VARCHAR(20)    DEFAULT 'Win',
   session     VARCHAR(50),
