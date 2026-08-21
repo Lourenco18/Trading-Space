@@ -17,11 +17,12 @@ if ($method === 'POST') {
     $b = body();
     if (empty($b['name'])) err('Name is required');
     $id = uuid();
-    $db->prepare('INSERT INTO strategies (id,user_id,name,color,description,entry_rules,exit_rules,timeframe,min_rr,risk_pct,notes,pairs,sessions) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    $db->prepare('INSERT INTO strategies (id,user_id,name,color,description,entry_rules,exit_rules,timeframe,min_rr,risk_pct,notes,pairs,sessions,pre_desc_bullish,pre_desc_bearish) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
        ->execute([$id, $uid, $b['name'], $b['color']??'#818cf8', $b['description']??'',
                   $b['entry_rules']??'', $b['exit_rules']??'', $b['timeframe']??'', $b['min_rr']??'',
                   $b['risk_pct']??null, $b['notes']??'',
-                  json_encode($b['pairs']??[]), json_encode($b['sessions']??[])]);
+                  json_encode($b['pairs']??[]), json_encode($b['sessions']??[]),
+                  $b['pre_desc_bullish']??'', $b['pre_desc_bearish']??'']);
     $row = $db->prepare('SELECT * FROM strategies WHERE id = ?');
     $row->execute([$id]);
     ok(['data' => parseRow($row->fetch())]);
@@ -34,11 +35,12 @@ if ($method === 'PUT') {
     $chk = $db->prepare('SELECT id FROM strategies WHERE id = ? AND user_id = ?');
     $chk->execute([$id, $uid]);
     if (!$chk->fetch()) err('Not found', 404);
-    $db->prepare('UPDATE strategies SET name=?,color=?,description=?,entry_rules=?,exit_rules=?,timeframe=?,min_rr=?,risk_pct=?,notes=?,pairs=?,sessions=? WHERE id=?')
+    $db->prepare('UPDATE strategies SET name=?,color=?,description=?,entry_rules=?,exit_rules=?,timeframe=?,min_rr=?,risk_pct=?,notes=?,pairs=?,sessions=?,pre_desc_bullish=?,pre_desc_bearish=? WHERE id=?')
        ->execute([$b['name'], $b['color']??'#818cf8', $b['description']??'',
                   $b['entry_rules']??'', $b['exit_rules']??'', $b['timeframe']??'', $b['min_rr']??'',
                   $b['risk_pct']??null, $b['notes']??'',
-                  json_encode($b['pairs']??[]), json_encode($b['sessions']??[]), $id]);
+                  json_encode($b['pairs']??[]), json_encode($b['sessions']??[]),
+                  $b['pre_desc_bullish']??'', $b['pre_desc_bearish']??'', $id]);
     $row = $db->prepare('SELECT * FROM strategies WHERE id = ?');
     $row->execute([$id]);
     ok(['data' => parseRow($row->fetch())]);

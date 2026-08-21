@@ -3590,6 +3590,20 @@
             ></textarea>
           </div>
           <div class="form-field" style="grid-column: 1/-1">
+            <label>Pré-descrição Bullish</label
+            ><textarea
+              id="sPreDescBullish"
+              placeholder="Texto que preenche automaticamente a descrição da trade quando a direção for Bullish/Buy..."
+            ></textarea>
+          </div>
+          <div class="form-field" style="grid-column: 1/-1">
+            <label>Pré-descrição Bearish</label
+            ><textarea
+              id="sPreDescBearish"
+              placeholder="Texto que preenche automaticamente a descrição da trade quando a direção for Bearish/Sell..."
+            ></textarea>
+          </div>
+          <div class="form-field" style="grid-column: 1/-1">
             <label>Pares Recomendados</label>
             <div class="cb-grid" id="pairsCB"></div>
           </div>
@@ -3914,6 +3928,8 @@
         minRR: r.min_rr || "",
         riskPct: r.risk_pct || "",
         notes: r.notes || "",
+        preDescBullish: r.pre_desc_bullish || "",
+        preDescBearish: r.pre_desc_bearish || "",
       });
       const mapTrade = (r) => ({
         id: r.id,
@@ -4788,36 +4804,17 @@
         return Number(match[2]) / Number(match[1]);
       }
 
-      function buildVolumeTradeTemplate(direction) {
-        const directionText = /buy|bullish|long/i.test(String(direction || "")) ? "Bullish" : "Bearish";
-        const bullish = directionText === "Bullish";
-
-        return bullish
-          ? "1-Enter the zone\n2- MSS to the upside\n3-Creation of a Bullish FVG\n4-Retest on FVG \n5-Enter\n6-BE at 1:2 RR \n7-TP at 1:3 RR\nRisk Explanation:"
-          : "1-Enter the zone\n2- MSS to the downside\n3-Creation of a Bearish FVG\n4-Retest on FVG \n5-Enter\n6-BE at 1:2 RR \n7-TP at 1:3 RR\nRisk Explanation:";
-      }
-
-      function buildCvdTradeTemplate(direction) {
-        const bullish = /buy|bullish|long/i.test(String(direction || ""));
-
-        return bullish
-          ? "1-Accumulation\n2-Strong moviment to the upside(volume pocket)\n3-CVD diversion\n4-Enter\n5-BE at 1:2 RR \n6-TP at 1:3 RR\nRisk Explanation:"
-          : "1-Accumulation\n2-Strong moviment to the downside(volume pocket)\n3-CVD diversion\n4-Enter\n5-BE at 1:2 RR \n6-TP at 1:3 RR\nRisk Explanation:";
-      }
-
       function buildStrategyAutoNote(strategyId) {
         if (!strategyId) return "";
         const strategy = S.strategies.find((s) => s.id === strategyId);
         if (!strategy) return "";
 
         const direction = document.getElementById("tDir")?.value || "";
+        const bullish = /buy|bullish|long/i.test(String(direction || ""));
 
-        if (/cvd/i.test(strategy.name || "")) {
-          return buildCvdTradeTemplate(direction);
-        }
-
-        if (/volume/i.test(strategy.name || "")) {
-          return buildVolumeTradeTemplate(direction);
+        const customPreDesc = bullish ? strategy.preDescBullish : strategy.preDescBearish;
+        if (customPreDesc && customPreDesc.trim()) {
+          return customPreDesc;
         }
 
         const asset = getTradeAssetLabel();
@@ -4968,7 +4965,7 @@
       function openStratModal(id = null) {
         _editStratId = id;
         _selColor = "#818cf8";
-        ["sName", "sDesc", "sEntry", "sExit", "sRR", "sRisk", "sNotes"].forEach(
+        ["sName", "sDesc", "sEntry", "sExit", "sRR", "sRisk", "sNotes", "sPreDescBullish", "sPreDescBearish"].forEach(
           (x) => {
             const el = document.getElementById(x);
             if (el) el.value = "";
@@ -5000,6 +4997,8 @@
           document.getElementById("sRR").value = s.minRR;
           document.getElementById("sRisk").value = s.riskPct;
           document.getElementById("sNotes").value = s.notes;
+          document.getElementById("sPreDescBullish").value = s.preDescBullish || "";
+          document.getElementById("sPreDescBearish").value = s.preDescBearish || "";
           _selColor = s.color;
           document.querySelectorAll("#colorPicker .cp-dot").forEach((d) => {
             d.classList.remove("sel");
@@ -5053,6 +5052,8 @@
           min_rr: document.getElementById("sRR").value,
           risk_pct: parseFloat(document.getElementById("sRisk").value) || null,
           notes: document.getElementById("sNotes").value,
+          pre_desc_bullish: document.getElementById("sPreDescBullish").value,
+          pre_desc_bearish: document.getElementById("sPreDescBearish").value,
           pairs,
           sessions,
         };
@@ -5130,6 +5131,8 @@
       ${s.desc ? `<p class="strat-desc">${s.desc}</p>` : ""}
       ${s.entryRules ? `<div class="field-label" style="margin-top:10px">Regras de Entrada</div><div class="strat-rules">${s.entryRules}</div>` : ""}
       ${s.exitRules ? `<div class="field-label" style="margin-top:8px">Regras de Saída</div><div class="strat-rules">${s.exitRules}</div>` : ""}
+      ${s.preDescBullish ? `<div class="field-label" style="margin-top:8px">Pré-descrição Bullish</div><div class="strat-rules">${s.preDescBullish}</div>` : ""}
+      ${s.preDescBearish ? `<div class="field-label" style="margin-top:8px">Pré-descrição Bearish</div><div class="strat-rules">${s.preDescBearish}</div>` : ""}
       ${s.pairs?.length ? `<div class="tag-row">${s.pairs.map((p) => `<span class="tag-pair">${p}</span>`).join("")}</div>` : ""}
       ${s.sessions?.length ? `<div class="tag-row">${s.sessions.map((x) => `<span class="tag-session">${x}</span>`).join("")}</div>` : ""}
       <div class="strat-stats">
